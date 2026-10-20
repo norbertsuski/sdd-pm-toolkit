@@ -184,12 +184,14 @@ Written only by sdd change skills (`/sdd-new`, `/sdd-plan`, `/sdd-implement`, `/
   is the change's `created:` date (`YYYY-MM-DD`). The stamped file carries `status: archived`.
 - Lifecycle `status` values include `new`, `planned`, `plan_reviewed`, `implementing`, `implemented`, `impl_reviewed`, `archived`.
 - `archived_at:` is an ISO-8601 UTC datetime (`2026-10-08T09:30:00Z`); read the first 10 characters as the date.
-- A full verification sets `status: impl_reviewed` together with the five `verified_*` keys:
+- A full verification sets `status: impl_reviewed` together with the four `verified_*` keys plus `updated`:
   `verified_source` (`review:<path>` or `factory-log:run-<K>`), `verified_verdict`, `verified_fingerprint`
-  (`sha256:<hex>`), `verified_at` (`YYYY-MM-DD`) and `updated`. Any verdict below can sit on an
-  `impl_reviewed` change; only `APPROVED` is positive, `NEEDS ATTENTION` and `REJECTED` need triage, and the
-  two `SKIPPED` values mean no independent review was run. Verdict values as `sdd-skills` writes them
-  (note the space in `NEEDS ATTENTION`):
+  (`sha256:<hex>`), `verified_at` (`YYYY-MM-DD`), and `updated`. Any verdict below can sit on an
+  `impl_reviewed` change. How sdd classifies a current verification:
+  - **positive** — `APPROVED`, `SKIPPED (trivial)`, `SKIPPED (declined)`, or `NEEDS ATTENTION` whose review
+    file has zero PENDING decisions (already triaged);
+  - **negative** — `REJECTED` (always), or `NEEDS ATTENTION` that is not yet triaged.
+  Verdict values as `sdd-skills` writes them (note the space in `NEEDS ATTENTION`):
 
 <!-- change-verdicts:start -->
 - `APPROVED`
