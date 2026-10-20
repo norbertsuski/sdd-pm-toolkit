@@ -490,7 +490,7 @@ if [[ -f .gitlab-ci.yml ]]; then
     || err ".gitlab-ci.yml must run: bash scripts/validate-pm-evals.sh"
 fi
 if [[ -f "$BS/references/tracker-map-format.md" ]]; then
-  for h in "## Frontmatter" "## Mapping table" "## Orphans" "## Issue mapping" "## Description template" "## Sync decision table"; do
+  for h in "## Frontmatter" "## Mapping table" "## Orphans" "## Issue mapping" "## Description template" "## Canonical rendering" "## Sync decision table"; do
     grep -qxF -- "$h" "$BS/references/tracker-map-format.md" || err "tracker-map-format.md missing heading: $h"
   done
   grep -qxF -- '| Roadmap ID | Change ID | Issue key | Issue URL | Synced title | Synced hash | Synced at |' "$BS/references/tracker-map-format.md" \
@@ -500,14 +500,19 @@ if [[ -f "$BS/SKILL.md" ]]; then
   for s in '../pm-help/references/integrations.md' 'never deletes' 'Export file instead' 'Contract check procedure' \
            'CONTRACT MISMATCH' 'tracker-map.md' 'pm-config.yml' 'sync_action' 'relink-ask' '## Orphans' \
            'Summary,Issue Type,Description,Labels' 'sdd:<change-id>' 'is blocked by' 'python3 -c' \
-           'pm-backlog-sync:csv-script' 'Apply'; do
+           'pm-backlog-sync:csv-script' 'pm-backlog-sync:hash-script' 'single-quoted heredoc' 'never interpolated' 'Apply'; do
     grep -qF -- "$s" "$BS/SKILL.md" || err "pm-backlog-sync/SKILL.md must mention '$s'"
   done
 fi
 if [[ -f "$BS/references/eval-cases.md" ]]; then
-  for id in BS-01 BS-02 BS-03 BS-04 BS-05 BS-06; do
+  for id in BS-01 BS-02 BS-03 BS-04 BS-05 BS-06 BS-07; do
     grep -qF "$id" "$BS/references/eval-cases.md" || err "pm-backlog-sync eval-cases.md missing $id"
   done
+  grep -qF '<date>-backlog.csv' "$BS/references/eval-cases.md" && grep -qF '<date>-backlog.csv' "$BS/SKILL.md" \
+    || err "pm-backlog-sync must name its export exports/<date>-backlog.csv (integrations.md convention)"
+  if grep -qF 'backlog-<date>' "$BS/SKILL.md" "$BS/references/eval-cases.md"; then
+    err "pm-backlog-sync must not use the old export name backlog-<date> (use <date>-backlog)"
+  fi
 fi
 if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
   grep -F '`tracker-map.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'tracker_project' \

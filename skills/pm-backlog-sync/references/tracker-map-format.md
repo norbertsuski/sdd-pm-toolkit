@@ -34,9 +34,9 @@ One row per roadmap item that has an issue. Heading `## Issues`, then exactly th
 - `Synced title`: the title last written to the issue (the roadmap's `Suggested issue title`).
 - `Synced hash`: the first 12 hex characters of the sha256 of the **rendered description** (see below) last written to the
   issue. It is what makes `changed` detectable without comparing tracker-side text, which the tracker may reformat.
-  Compute it with a command, never by eye:
-  `python3 -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest()[:12])' <file>`
-  where `<file>` holds exactly the rendered description text (write it to a temp file first; the trailing newline is part of it).
+  Compute it with the command in `SKILL.md` Step 4 (a `python3 -c` one-liner that reads a file); it applies the normalization
+  of `## Canonical rendering` itself, so the hash is a function of the content, never of line endings, trailing spaces or how many
+  blank lines the model happened to emit. The file path is the only thing put on the command line.
 - `Synced at`: `YYYY-MM-DD` from `date +%Y-%m-%d`.
 - A row is appended **immediately** after its create succeeds (not at the end of the run), so a partly failed run is resumable.
 
@@ -45,7 +45,8 @@ One row per roadmap item that has an issue. Heading `## Issues`, then exactly th
 Heading `## Orphans`, after the mapping table, same header as the table above plus a final column `Orphaned on`
 (`YYYY-MM-DD`). A row lives here when its `Change ID` no longer exists in the roadmap's `## Backlog Handoff` table. Orphan
 rows are kept: the tracker issue is never closed, renamed or deleted by this skill, and the row stays until the PM removes it
-by hand or relinks it. With no orphans the section holds the line `None.`
+by hand or relinks it. A Change ID that comes back to the roadmap while its row is here is offered a relink to that key, never a new
+issue. Existing orphan rows are shown in every run's preview and report. With no orphans the section holds the line `None.`
 
 ## Issue mapping
 
@@ -91,6 +92,21 @@ bold markers removed. Nothing is paraphrased or invented. Prerequisites, status 
 description: they change without the work changing, and would make every run look like an update. Prerequisites become links;
 status becomes the transition offer.
 
+## Canonical rendering
+
+The hash must be stable across runs, so the description is rendered the same way every time:
+
+1. Use the template above verbatim: the same labels (`Outcome:`, `PRD refs:`, `Acceptance criteria:`, `From US-NN (<title>):`,
+   `Change ID:`, `Roadmap:`), the same order, one `- ` bullet per line, user stories in the order the PRD refs list them, Given /
+   When / Then first and then the story's acceptance bullets in the PRD's order, one blank line between parts.
+2. Copy field text from the roadmap and PRD as is (after removing the `**` around Given / When / Then); do not reword, reflow, re-wrap
+   or "tidy" it.
+3. The hash command normalizes before hashing: CRLF and CR become LF, trailing whitespace is stripped from every line, runs of blank
+   lines collapse to one, leading and trailing blank lines are dropped, and the text ends with exactly one final newline. So two
+   renderings that differ only in those ways hash the same, and the "trailing newline" question has one answer: the normalized text
+   always ends with exactly one `\n`, whatever the file did.
+4. Text content differences (a word, a bullet, an order change) change the hash on purpose: that is an `update`.
+
 ## Sync decision table
 
 `sync_action <in_roadmap> <in_map> <tracker_exists> <changed>` (reference function and asserts:
@@ -105,6 +121,9 @@ newly rendered description differs from `Synced hash`.
 | yes | yes | no | — | `relink-ask` | The mapped issue is gone; ask, never recreate on its own |
 | no | yes | — | — | `orphan` | Roadmap no longer has this Change ID; move the row to `## Orphans`, leave the issue alone |
 | no | no | — | — | `none` | Not applicable |
+
+A `create` whose Change ID matches a row in `## Orphans` is not created: it becomes `relink-ask` toward that row's key (SKILL.md
+Step 6, orphan guards). The table above is the pure function; the guards run around it.
 
 `tracker_exists` comes from fetching the mapped issue by key. A fetch that fails for any reason other than "not found"
 (permissions, network, tool error) is **not** `tracker_exists=no`: stop and report it, never treat it as a deleted issue.
