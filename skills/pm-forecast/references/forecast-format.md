@@ -58,7 +58,8 @@ seed: 42
 1. Throughput-based: the forecast replays how many changes finished per week in the past; it does not look at how big the remaining items are.
 2. It ignores dependency depth and parallelism: the order of items, what has to be finished first and how many people work at once are not modelled.
 3. Blocked items are counted as remaining and treated as deliverable at the normal pace; if a block lasts, the real dates move later.
-4. A forecast is a range, not a promise; three weeks of history is little, and a change in team size, scope or holidays breaks the assumption that the future looks like the past.
+4. Team pace: history is every archived change in the context root, not only this project's; with several projects in one root the pace is pooled.
+5. A forecast is a range, not a promise; three weeks of history is little, and a change in team size, scope or holidays breaks the assumption that the future looks like the past.
 
 ## Deadline Check
 
@@ -111,7 +112,7 @@ Facts the script used, so a reader can check them:
 
 ### `## Assumptions & Caveats`
 
-Always present, also when there are no dates. Always these four, in the person's terms in the chat and in these
+Always present, also when there are no dates. Always these five, in the person's terms in the chat and in these
 words in the file:
 
 1. **Throughput-based.** The forecast replays how many changes finished per week in the past; it does not look at
@@ -120,10 +121,12 @@ words in the file:
    people work at once are not modelled; the past pace is assumed to continue.
 3. **Blocked items counted as remaining.** Items waiting on a decision are included in the count and treated as
    deliverable at the normal pace; if a block lasts, the real dates move later.
-4. **A forecast is a range, not a promise.** Few weeks of history make the range unreliable; a change in team size,
+4. **Team pace.** History is every archived change in the context root, not only this project's (archive entries carry no
+   project id); with several projects in one root the pace is pooled.
+5. **A forecast is a range, not a promise.** Few weeks of history make the range unreliable; a change in team size,
    scope or holidays breaks the assumption that the future looks like the past.
 
-Add a fifth line when it applies: "N archive entries had no usable archive date and were not counted."
+Add a sixth line when it applies: "N archive entries had no usable archive date and were not counted."
 
 The file never contains a story-point, hour or day estimate for an item. `roadmap.md` stays estimate-free.
 

@@ -127,8 +127,10 @@ stop.
    other two). If two dates are equal, still say all three. A date more than 10 years away (520 weeks) is reported as "more than 10
    years away at this pace".
 3. What it is built on: the weekly counts (`throughput`, from `throughput_from` to `throughput_to`), in one line.
-4. The caveats in one or two sentences (the four in `references/forecast-format.md`): it extrapolates the past pace, ignores how big
-   items are, what depends on what and how many people work in parallel, and counts blocked items as ordinary work.
+4. The caveats in one or two sentences (the five in `references/forecast-format.md`): it extrapolates the past pace, ignores how big
+   items are, what depends on what and how many people work in parallel, counts blocked items as ordinary work, and uses the pace of
+   everything archived in the context root, not only this project (plain mode: "it uses how fast the whole team has finished things,
+   not only this product").
 
 ### Step 5 — Deadline check
 
@@ -194,8 +196,8 @@ Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
    replaces it. Never invent, borrow or assume history (no industry averages, no velocity from memory).
 4. **The script is the only source of numbers.** Never compute, adjust, round or "sanity-correct" dates or weeks mentally; if the script
    cannot be found or run, say so and STOP.
-5. **Caveats always written.** Throughput-based, ignores dependency depth and parallelism, blocked items counted as remaining, a range
-   not a promise: in the chat summary and in the file, also when there are no dates.
+5. **Caveats always written.** Throughput-based, ignores dependency depth and parallelism, blocked items counted as remaining, team pace
+   (every archived change in the context root, not only this project's; pooled across projects), a range not a promise: in the chat summary and in the file, also when there are no dates.
 6. **Contract first.** A missing roadmap heading → one `CONTRACT MISMATCH` line and STOP, before running the script.
 7. **No silent overwrite.** An existing `forecast.md` triggers the summary of differences and the Overwrite / Cancel question; a write needs
    a yes to the preview.

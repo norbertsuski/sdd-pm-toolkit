@@ -464,7 +464,7 @@ if [[ -f "$PF/references/forecast-format.md" ]]; then
   for h in "## Forecast" "## Inputs" "## Assumptions & Caveats" "## Deadline Check"; do
     grep -qxF -- "$h" "$PF/references/forecast-format.md" || err "forecast-format.md missing heading: $h"
   done
-  for s in 'monte-carlo-throughput' 'ignores dependency depth and parallelism' 'blocked items'; do
+  for s in 'monte-carlo-throughput' 'ignores dependency depth and parallelism' 'blocked items' 'Team pace'; do
     grep -qF -- "$s" "$PF/references/forecast-format.md" || err "forecast-format.md must mention '$s'"
   done
 fi
