@@ -45,6 +45,28 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | `pm-forecast` | Answers "when will we be done?" with three dates (likely / very likely / almost certain), never one: a bundled stdlib `python3` script replays the weekly throughput of archived changes against the items left on the roadmap (Monte Carlo), checks the PRD's hard deadline, and writes `forecast.md`. With too little history it gives no dates and says what is needed. Never edits `roadmap.md`, which stays estimate-free. |
 | `pm-status` | Writes the stakeholder status report `status/<date>.md`: per-item state (done / in-progress / blocked / next) derived from the roadmap, `changes/` and `archive/`, a red / amber / green verdict from a fixed rule (never by feel), what changed since the previous report, risks, decisions needed, next up, and the saved forecast when it is at most 7 days old. Offers to publish a Confluence or Notion page (created once, then updated); Slack and email are drafts, and nothing is posted or sent without a yes that names the channel or recipients. Without a connection it saves paste-ready files. A reporting view: `/sdd-project-run --status` stays authoritative. |
 
+## Typical PM flow
+
+Start anywhere; `/pm-help` shows the map and, given a project name, where that project stands.
+
+```
+ research ──▶ discover ──────────────────────────────▶ prd-review ──▶ metrics
+ (pm-research-   (pm-discover routes:                    (pm-prd-       (pm-metrics)
+  synthesis)      sdd-init → sdd-frame? →                 review)
+                  sdd-shape → sdd-prd)
+                                                                          │
+ status ◀── forecast ◀── backlog-sync ◀── prioritize ◀── roadmap ◀────────┘
+ (pm-status)  (pm-forecast) (pm-backlog-sync) (pm-prioritize) (sdd-roadmap)
+                                                               │
+                                                  build side: sdd-plan → sdd-implement → sdd-archive
+```
+
+1. `/pm-help` for the map. Optional: `/pm-research-synthesis @interviews/*.md <topic>` first.
+2. `/pm-discover "<idea>"` walks init, shape and PRD, one confirmed step at a time. Then `/pm-prd-review`, then `/pm-metrics`.
+3. `/sdd-roadmap` (from `sdd-skills`, after the stack step) turns the PRD into ordered slices.
+4. `/pm-prioritize`, `/pm-backlog-sync` and `/pm-forecast` work from the roadmap; `/pm-status` writes the stakeholder report.
+5. The build side (`/sdd-plan`, `/sdd-implement`, `/sdd-archive`) belongs to `sdd-skills`. Steps 4 and 5 repeat as the project moves.
+
 ## Ownership
 
 The PM skills never take over artifacts owned by `sdd-skills`. Each artifact under
@@ -68,6 +90,42 @@ The PM skills never take over artifacts owned by `sdd-skills`. Each artifact und
 | `foundation/<slug>/pm-config.yml` | any PM skill, after user confirms | write |
 | `foundation/<slug>/exports/*` | PM skills (fallback when no MCP) | write |
 
+## Integrations
+
+Markdown under `$CONTEXT_ROOT/` is the source of truth; trackers, doc tools and chat are one-way projections.
+The full protocol is in [`skills/pm-help/references/integrations.md`](skills/pm-help/references/integrations.md).
+
+- **Adapters** are detected by the tool names the host exposes (case-insensitive substring): `jira`, `linear`
+  (tracker); `confluence`, `notion` (docs); `slack` (chat); `gmail` / `outlook` (email drafts). Nothing is assumed.
+- **`pm-config.yml`** (`foundation/<slug>/pm-config.yml`) remembers the choice per project (`tracker`,
+  `tracker_project`, `docs`, `docs_location`, `channel`, `channel_target`, `status_page`), written only after you confirm it.
+  No tokens or credentials are ever stored.
+- **Write protocol** for every external write: preview (what, where, how many) → `Apply` / `Export file instead` /
+  `Cancel` → sequential writes that stop on the first error and keep partial progress → report of keys and URLs.
+  Nothing is ever deleted in a tracker.
+- **Messages are drafts first.** Slack and email text is shown (or saved) as a draft; posting or sending needs a
+  separate yes that names the channel or recipients.
+- **No connection?** The skills write paste-ready files to `foundation/<slug>/exports/<date>-<what>.<ext>` (Jira CSV,
+  Markdown page, message text) and say plainly that nothing was created or sent.
+
+## Relationship to sdd-skills
+
+`sdd-pm-skills` needs the **sdd-skills** plugin at runtime and reuses it for init, shaping, PRD and roadmap; nothing is
+copied or forked. PM skills never link into `sdd-skills` files. Instead, what they rely on (PRD and roadmap headings,
+frontmatter keys, change and archive keys, folder layout) is restated as a pinned **consumer contract** in
+[`skills/pm-help/references/sdd-contract.md`](skills/pm-help/references/sdd-contract.md), tagged
+`sdd_skills_version: 0.4.1`. Every skill that reads `prd.md` or `roadmap.md` checks the required headings first and
+stops on a mismatch instead of guessing.
+
+When `sdd-skills` ships a new version, check for drift against a local checkout (manual, read-only):
+
+```
+bash scripts/check-sdd-contract.sh /path/to/sdd-toolkit
+```
+
+It prints `drift: <string>` for every contract string the checkout no longer contains (exit 0 = no drift).
+This repository never modifies `sdd-toolkit`.
+
 ## Install for Cursor
 
 Cursor has native [Skills](https://cursor.com/docs/skills) that use the **same
@@ -86,4 +144,10 @@ cp -R /path/to/sdd-pm-toolkit/skills/pm-* ~/.cursor/skills/
 
 ```
 bash scripts/validate-structure.sh
+bash scripts/validate-pm-evals.sh
+python3 -m unittest discover -s tests -v
+bash scripts/check-sdd-contract.sh /path/to/sdd-toolkit   # manual drift check
 ```
+
+The skills themselves are checked by hand with [`docs/smoke-test.md`](docs/smoke-test.md): a manual end-to-end
+checklist on the bundled fixture, plus the live-integration checks that cannot run offline.

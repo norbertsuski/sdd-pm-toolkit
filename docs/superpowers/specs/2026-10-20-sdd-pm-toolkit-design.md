@@ -17,7 +17,7 @@ for shaping, PRD and roadmap instead of copying them.
 | D1 | Product manager first. Project-manager skills (RAID, stakeholders, launch, retro) are v0.2+. |
 | D2 | Depend on `sdd-skills` at runtime. PM skills invoke `/sdd-init`, `/sdd-frame`, `/sdd-shape`, `/sdd-prd`, `/sdd-roadmap` via the Skill tool. Nothing is copied. |
 | D3 | Integrations: Jira, Confluence, Linear, Notion, Slack, email, plus git `context/` files. Markdown in `context/` is the source of truth; external tools are projections. |
-| D4 | Estimates exist only in a separate `pm-forecast` skill writing `forecast.md`. `roadmap.md` stays estimate-free. |
+| D4 | Time estimates (dates) live only in `forecast.md`, written by `pm-forecast`. `roadmap.md` stays estimate-free. `prioritization.md` may hold PM-supplied effort inputs (person-weeks), used only for scoring, never as a delivery estimate. |
 | D5 | The `sdd-toolkit` repository is not modified. Every integration point uses contracts `sdd-skills` 0.4.1 already exposes. |
 
 ## Non-goals (v0.1)
@@ -27,7 +27,7 @@ for shaping, PRD and roadmap instead of copying them.
   `prd.md` is written only by `pm-prd-review` triage, with per-finding approval.
 - No two-way tracker sync: tracker status is never written back into `roadmap.md`.
 - No sending of messages (Slack post, email send) without an explicit yes naming the destination.
-- No time estimates outside `forecast.md`.
+- No time estimates outside `forecast.md`. `prioritization.md` may hold PM-supplied effort inputs used only for scoring, not as delivery estimates.
 
 ## Ownership boundary
 
@@ -116,3 +116,16 @@ identical in both modes.
 - `tests/test_forecast.py` — stdlib `unittest` for `pm-forecast/scripts/forecast.py`.
 - `skills/*/references/eval-cases.md` — behavioral prompt fixtures per skill.
 - GitLab CI runs all three automated checks.
+
+## Amendments (2026-10-20, during implementation)
+
+- R11: sdd verdicts are spelled `APPROVED | NEEDS ATTENTION | REJECTED | SKIPPED (...)` (space); only `pm-prd-review`'s own artifact uses `NEEDS_ATTENTION`.
+- R13: `pm-status` needs-triage follows sdd's classification: negative = REJECTED or NEEDS ATTENTION with pending decisions; positive = APPROVED, SKIPPED, triaged NEEDS ATTENTION.
+- R16: `pm-discover` adds the sdd stack gate before the roadmap (`foundation/tech-stack.md` or `foundation/stack-assessment.md`); the human may hand off or skip.
+- R17: `prd.md` presence wins over shape state in `pm-discover` stage derivation; a draft unreviewed PRD is routed to `/pm-prd-review` even when a roadmap exists.
+- R21: `pm-discover` counts the PRD as reviewed only by `status: reviewed|locked` or a latest review with `verdict: APPROVED`; a NEEDS_ATTENTION or REJECTED latest review keeps the stage `specified`.
+- R23: `pm-prioritize` hand-off is a `/sdd-roadmap` re-run (list as input to its anchor questions, with a warning that regeneration rebuilds statuses) or a human hand-edit of `roadmap.md`; no per-slice overrides are promised.
+- R24: `pm-forecast` throughput pools every archived change under the context root (team pace), and `forecast.md` caveats say so.
+- R25: `tracker-map.md` gains a `Synced hash` column (sha256 of the rendered description, 12 hex) so changed descriptions can be detected.
+- R26: export files are named `exports/<YYYY-MM-DD>-<what>.<ext>` per `integrations.md` (for example `exports/<date>-backlog.csv`).
+- R29: `forecast.md` frontmatter carries a machine-readable `deadline_risk` that `pm-status` reads; the script is unchanged.
