@@ -91,8 +91,8 @@ Read-only probes (`find`, `test`, `ls`, `grep`, Read). `<P>` = `$CONTEXT_ROOT/fo
 | 2 | `unshaped` | no `<P>/shape-notes.md` **and** no `<P>/prd.md` (or no project folder yet) | `/sdd-shape` (`/sdd-frame` first when the idea is a solution without a problem) |
 | 3 | `shaping` | no `<P>/prd.md`; `shape-notes.md` frontmatter `checkpoint.current_phase` below 8 (or the block is unreadable) | `/sdd-shape` (resumes from its own checkpoint) |
 | 4 | `shaped` | no `<P>/prd.md`; `checkpoint.current_phase` is 8 | `/sdd-prd` |
-| 5 | `specified` | `<P>/prd.md` exists, frontmatter `status: draft`, and no `<P>/prd-review-*.md` | `/pm-prd-review` |
-| 6 | `stack-pending` | `prd.md` reviewed (`status` not `draft`, or a `prd-review-*.md` exists); no `<P>/roadmap.md`; stack signal absent | the stack step, by a developer |
+| 5 | `specified` | `<P>/prd.md` exists and is **not reviewed** (see the rule below) | `/pm-prd-review` (or resuming the latest saved review) |
+| 6 | `stack-pending` | `prd.md` **reviewed** (see the rule below); no `<P>/roadmap.md`; stack signal absent | the stack step, by a developer |
 | 7 | `reviewed` | as 6 but the stack signal is present | `/sdd-roadmap` |
 | 8 | `roadmapped` | `<P>/roadmap.md` exists | hand over: `/pm-prioritize`, `/pm-backlog-sync` |
 
@@ -104,9 +104,15 @@ Rules that keep the table honest:
 - **Row 3 vs row 4 comes from `shape-notes.md`, never from the conversation.** Read `checkpoint.current_phase`
   (`1`..`6` discovery, `7` closing cross-check, `8` finalized; strings in `../pm-help/references/sdd-contract.md`,
   section `## Shape checkpoint contract`). Only an exact `8` is `shaped`.
-- **Row 5 and 6 read only the frontmatter of `prd.md`** (`status`, `context_type`) and the file names; no section
-  is parsed, so the contract check procedure is not needed here. Whoever reads headings later runs it first.
-- **Row 5 wins over row 8** even if a `roadmap.md` already exists: a draft, never-reviewed PRD is flagged first.
+- **Reviewed means one of two things.** `prd.md` frontmatter `status` is `reviewed` or `locked`; or the **latest**
+  `<P>/prd-review-*.md` has frontmatter `verdict: APPROVED`. Latest = newest date in the file name, then the highest
+  `-N` suffix (`prd-review-2026-10-18-2.md` is later than `prd-review-2026-10-18.md`). Any other case is **not reviewed**:
+  no report, or a latest report whose verdict is `NEEDS_ATTENTION` or `REJECTED`. A saved but unfinished or negative
+  review never lets the PRD through to the stack step or the roadmap.
+- **Row 5 and 6 read only the frontmatter of `prd.md`** (`status`, `context_type`), the file names and the frontmatter
+  `verdict` of the latest review report; no section is parsed, so the contract check procedure is not needed here.
+  Whoever reads headings later runs it first.
+- **Row 5 wins over row 8** even if a `roadmap.md` already exists: a PRD that is not reviewed (never reviewed, or its latest review ended `NEEDS_ATTENTION` or `REJECTED`) is flagged first.
   Say that a build plan already exists, so the review is a check after the fact; the choice stays with the PM.
 - **The stack signal** (row 6/7) is file presence only, and root-level: `$CONTEXT_ROOT/foundation/tech-stack.md`
   when the PRD's `context_type` is `greenfield`, `$CONTEXT_ROOT/foundation/stack-assessment.md` when `brownfield`
@@ -123,7 +129,7 @@ Plain-mode words for each stage and its next step (show the command once in pare
 | `unshaped` | "Your idea hasn't been talked through yet." | A guided conversation that turns it into a clear product idea (`/sdd-shape`) |
 | `shaping` | "You started talking the idea through and stopped part-way." | Pick the conversation up where it stopped (`/sdd-shape`) |
 | `shaped` | "The idea is fully talked through; no product write-up yet." | Write the product write-up (`/sdd-prd`) |
-| `specified` | "The product write-up is a first draft nobody has checked." | Have it reviewed for gaps and risks (`/pm-prd-review`) |
+| `specified` | "The product write-up is a first draft nobody has checked." (or, after a review that found problems: "A review found things to settle before planning.") | Have it reviewed for gaps and risks, or pick the unfinished review back up (`/pm-prd-review`) |
 | `stack-pending` | "The write-up is reviewed. One technical decision is still open." | A developer chooses the technology (see Step 4) |
 | `reviewed` | "The write-up is reviewed and the technology is decided." | Turn it into a build plan (`/sdd-roadmap`) |
 | `roadmapped` | "There is a build plan." | Rank the pieces or send them to your tracker (`/pm-prioritize`, `/pm-backlog-sync`) |
@@ -176,7 +182,12 @@ the closing cross-check did not finish, so the PRD would be written from an unfi
 **`shaped`** — "Write the product write-up now? 1. Yes (Recommended) 2. Not now". On yes invoke `/sdd-prd @<path to the project's shape-notes.md>` (it takes a path argument, so it cannot pick another project's notes).
 
 **`specified`** — recommend the review. First confirm `pm-prd-review` is among the host's available skills.
-- **Available** → "Have the write-up reviewed before planning the build? 1. Yes, review it (Recommended) 2. Skip the review this time 3. Not sure".
+- **Available, and the latest `prd-review-*.md` has `verdict: NEEDS_ATTENTION` or `REJECTED`** → say what that review concluded
+  in words (and that it was saved on its date), then: "Pick that review back up and settle what's open? 1. Yes, resume it (Recommended)
+  2. Start a fresh review 3. Skip the review this time 4. Not sure". On 1 invoke `/pm-prd-review` with the path of that report (resume
+  mode); on 2 invoke it with the project; on 3 treat the PRD as reviewed for this run only, as below, and say plainly that the last
+  review was not approved. Never route to the stack step or the roadmap because a report merely exists.
+- **Available, no negative report** → "Have the write-up reviewed before planning the build? 1. Yes, review it (Recommended) 2. Skip the review this time 3. Not sure".
   On 1 invoke `/pm-prd-review` for this project. On 2 treat the PRD as reviewed **for this run only**: continue as `stack-pending` or `reviewed` by the
   stack signal; the next run will offer the review again, because skipping leaves no mark on disk. Say so.
 - **Not available** → "The review step (/pm-prd-review) isn't installed in this project, so I'm skipping it for now." Continue as above for this run.

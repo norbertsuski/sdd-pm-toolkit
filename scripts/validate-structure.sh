@@ -261,12 +261,12 @@ done
 if [[ -f "$PD/SKILL.md" ]]; then
   for s in '/sdd-init' '/sdd-frame' '/sdd-shape' '/sdd-prd' '/pm-prd-review' '/sdd-roadmap' \
            '/sdd-tech-stack-selector' '/sdd-stack-assess' '/sdd-health-check' \
-           'git mv' 'checkpoint.current_phase' 'stack-pending'; do
+           'git mv' 'checkpoint.current_phase' 'stack-pending' 'verdict: APPROVED'; do
     grep -qF -- "$s" "$PD/SKILL.md" || err "pm-discover/SKILL.md must mention '$s'"
   done
 fi
 if [[ -f "$PD/references/eval-cases.md" ]]; then
-  for id in DS-01 DS-02 DS-03 DS-04 DS-05 DS-06 DS-07; do
+  for id in DS-01 DS-02 DS-03 DS-04 DS-05 DS-06 DS-07 DS-08; do
     grep -qF "$id" "$PD/references/eval-cases.md" || err "pm-discover eval-cases.md missing $id"
   done
 fi

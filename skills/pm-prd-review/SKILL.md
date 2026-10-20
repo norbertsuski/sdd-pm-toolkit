@@ -266,7 +266,10 @@ the resume hint is printed.
 
 ### Step 9 — Resume mode
 
-Entered when given a saved report. Read it, parse the `### F` headings and their `Decision:` lines, take those `PENDING` or
+Entered when given a saved report. First run Steps 1 to 3 for the report's project: resolve the audience, `CONTEXT_ROOT` and
+project (the report's folder under `foundation/<slug>/` and its `PRD:` line give the PRD path; a `prd.md` that is missing
+there is a STOP), run the contract check of Step 2 on that `prd.md` (mismatch → the one `CONTRACT MISMATCH` line and STOP, nothing
+edited), and read the PRD and its `status` (a `locked` PRD stays read-only). Only then read the report, parse the `### F` headings and their `Decision:` lines, take those `PENDING` or
 `DEFERRED`; none → "All findings are triaged", show the final verdict and go to Step 10. Before triaging, re-check each
 remaining finding's `Evidence:` quote against the current `prd.md` (the file may have changed since the review). A quote that no
 longer occurs → tell the person the line has changed, show the nearest current text, and ask: "Dismiss as already resolved
