@@ -27,21 +27,21 @@ or an issue disappears from the tracker, this skill tells the PM and asks, it do
 
 **Use when** a `roadmap.md` exists and the PM wants its items as issues (first time, or again after the roadmap changed).
 
-**Skip when** there is no roadmap yet (`/pm-discover` → `/sdd-roadmap`); when the question is which item to do first
+**Skip when** there is no roadmap yet (`/pm-discover` → `/pm-roadmap`); when the question is which item to do first
 (`/pm-prioritize`); when the PM wants status read back from the tracker into the roadmap (not supported: sync is one-way, and
-`roadmap.md` is only ever updated by the sdd skills); or when the PM wants a status report for stakeholders (`/pm-status`).
+`roadmap.md` is only ever updated by `pm-roadmap` and a developer's archive step); or when the PM wants a status report for stakeholders (`/pm-status`).
 
 ## Relationship to other skills
 
-- `/sdd-roadmap` — owns `roadmap.md`; this skill reads `## At a glance`, the item sections and `## Backlog Handoff`, and never edits the file.
-- `/sdd-prd` — owns `prd.md`; read only, for the user stories named in each item's PRD refs.
+- `/pm-roadmap` — owns `roadmap.md`; this skill reads `## At a glance`, the item sections and `## Backlog Handoff`, and never edits the file.
+- `/pm-prd` — owns `prd.md`; read only, for the user stories named in each item's PRD refs.
 - `/pm-prioritize` — decides order; this skill does not reorder anything and does not write priorities into issues.
-- `/sdd-plan <change-id>` — the build side. The label `sdd:<change-id>` on each issue is the thread between a ticket and a change.
+- The build side — a developer plans and builds each change by its `<change-id>`, in their own workflow. The label `sdd:<change-id>` on each issue is the thread between a ticket and a change.
 - `/pm-forecast`, `/pm-status` — read the roadmap and the archive, not the tracker; `/pm-status` may quote `tracker-map.md`.
 - `/pm-help` — the map of the PM flow.
 
 Shared rules, linked rather than restated: finding the root and the project — `../pm-help/references/context-resolution.md`;
-the contract check and the roadmap and PRD headings — `../pm-help/references/sdd-contract.md`; audience and plain language —
+the contract check and the roadmap and PRD headings — `../pm-help/references/artifact-contract.md`; audience and plain language —
 `../pm-help/references/plain-language.md`; adapter detection, `pm-config.yml`, the write protocol (Preview, then `Apply` /
 `Export file instead` / `Cancel`) and the export fallback — `../pm-help/references/integrations.md`; where `tracker-map.md`
 sits among the PM artifacts — `../pm-help/references/pm-artifacts.md`; the map file format, the issue mapping, the
@@ -53,7 +53,7 @@ the decision table as runnable asserts — `scripts/validate-pm-evals.sh` in the
 1. **A project name** → use it. **A tracker named** ("to Linear") → use it as the starting answer for Step 3.
 2. **A request to delete or close issues**, or to "clean up" the tracker → decline in one sentence: this skill never deletes or
    closes issues; orphans are reported and the PM decides in the tracker. Offer the sync.
-3. **A request to write issue keys into the roadmap** → decline: `roadmap.md` belongs to `/sdd-roadmap`; keys live only in `tracker-map.md`.
+3. **A request to write issue keys into the roadmap** → decline: `roadmap.md` belongs to `/pm-roadmap`; keys live only in `tracker-map.md`.
 4. **A request to import tracker status back into the roadmap** → decline: one-way sync.
 
 Say what is about to happen in a sentence or two, for example: "I'll read your build plan, work out which items already have a
@@ -73,7 +73,7 @@ ticket and which do not, show you the list, and only create or change tickets af
 
 ### Step 2 — Contract check (STOP on mismatch)
 
-Run the `## Contract check procedure` in `../pm-help/references/sdd-contract.md` **before reading anything else** from the files:
+Run the `## Contract check procedure` in `../pm-help/references/artifact-contract.md` **before reading anything else** from the files:
 
 - `roadmap.md` against the `roadmap` heading list (always).
 - `prd.md` against `prd-greenfield` or `prd-brownfield` by its `context_type` (when the file exists). A PRD that does not exist is
@@ -82,7 +82,7 @@ Run the `## Contract check procedure` in `../pm-help/references/sdd-contract.md`
 Any heading missing → print one line and STOP, no question, no tracker call, no file:
 
 ```
-CONTRACT MISMATCH: roadmap.md missing ## Backlog Handoff; sdd-skills expected 0.4.1
+CONTRACT MISMATCH: roadmap.md missing ## Backlog Handoff
 ```
 
 (file name, then the missing headings comma-separated). Plain mode says it in words (the build plan is missing sections this step

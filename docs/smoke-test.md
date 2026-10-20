@@ -1,7 +1,7 @@
 # Manual smoke test — sdd-pm-skills 0.1.0
 
-The automated checks (`validate-structure.sh`, `validate-pm-evals.sh`, `tests/test_forecast.py`,
-`check-sdd-contract.sh`) cannot run a skill inside a host. This checklist does. It has two parts:
+The automated checks (`validate-structure.sh`, `validate-pm-evals.sh`, `tests/test_forecast.py`)
+cannot run a skill inside a host. This checklist does. It has two parts:
 
 - **Part 1** — an end-to-end run on the bundled fixture with no tracker, wiki or chat connection (about 30 minutes).
 - **Part 2** — live-integration checks that could not be verified offline (need real connections).
@@ -14,11 +14,10 @@ Wording will vary; check the structure and the "Fail if" lines of those cases.
 
 ### Setup
 
-Use a scratch directory, never the repo itself. `PM` is this repository; `SDD` is a checkout of `sdd-toolkit`.
+Use a scratch directory, never the repo itself. `PM` is this repository.
 
 ```bash
 PM=/Users/norbertsuski/Documents/Code/Private/sdd-pm-toolkit
-SDD=/Users/norbertsuski/Documents/Code/Private/sdd-toolkit
 
 SMOKE=$(mktemp -d)
 cp -R "$PM/tests/fixtures/flat-root/." "$SMOKE/"
@@ -26,19 +25,10 @@ cd "$SMOKE"
 git init -q && git add -A && git commit -q -m "fixture baseline"
 git status --short            # expect: nothing (clean baseline)
 
-claude --plugin-dir "$PM" --plugin-dir "$SDD"
+claude --plugin-dir "$PM"
 ```
 
-Fallback if the host rejects a repeated `--plugin-dir`: install `sdd-skills` from its marketplace and load only the PM plugin by directory.
-
-```
-/plugin marketplace add https://gitlab.com/norbert.suski/sdd-toolkit.git
-/plugin install sdd-skills@sdd-toolkit
-```
-
-then restart with `claude --plugin-dir "$PM"` from `$SMOKE`.
-
-Once inside, confirm both plugins loaded: `/pm-help` and `/sdd-help` should both be known commands.
+Once inside, confirm the plugin loaded: `/pm-help`, `/pm-init`, `/pm-shape` and `/pm-roadmap` should all be known commands.
 If a PM skill asks which audience you want, answer `plain`. Answer `Yes` when asked to confirm project
 `recipe-fridge` or the single context root `context` (flat layout, one project, nothing ambiguous).
 
@@ -83,7 +73,7 @@ S-06 blocked); four archived changes; no `shape-notes.md`, no `tech-stack.md`.
 - **Expect (PZ-01, PZ-04 if you ask it to apply the ranking):** exactly three items asked about and scored (the four
   done items are never scored); S-06 flagged `blocked (waiting on a decision)`, S-05 `already in progress`. Scores
   S-04 106.7, S-05 75.0, S-06 25.0, computed with `python3` and shown with the command. `## Dependency Conflicts` is
-  `None.`. If you then say "apply this ranking to the roadmap", it declines and offers a `/sdd-roadmap` re-run or a
+  `None.`. If you then say "apply this ranking to the roadmap", it declines and offers a `/pm-roadmap` re-run or a
   hand-edit.
 - **Check:** new file `prioritization.md`; `roadmap.md` byte-identical.
 
@@ -164,9 +154,9 @@ Clean up: `rm -rf "$SMOKE"`.
 ### Optional extras on the same scratch copy
 
 - **PRD gate (DS-05, DS-08):** `/pm-discover recipe-fridge` on a fresh copy recommends `/pm-prd-review` first (not
-  `/sdd-shape`, `/sdd-prd` or `/sdd-roadmap`) and invokes nothing without a yes.
-- **Missing sdd-skills (HL-02, DS-06):** start `claude --plugin-dir "$PM"` alone; `/pm-help recipe-fridge` and
-  `/pm-discover` print the Install block and stop.
+  `/pm-shape`, `/pm-prd` or `/pm-roadmap`) and invokes nothing without a yes.
+- **No other plugin needed (HL-02, DS-06):** `claude --plugin-dir "$PM"` alone is the whole setup; `/pm-help recipe-fridge`
+  and `/pm-discover recipe-fridge` never ask you to install anything and go straight to the report or the next step.
 
 ## Part 2 — Live-integration checks (not verifiable offline)
 
@@ -175,7 +165,7 @@ production board, space or channel. Record pass/fail and the tool names the host
 
 ### 2.1 MCP tool discovery
 
-For each connection you have, start `claude` with that MCP server enabled next to both plugins, then ask a PM skill that
+For each connection you have, start `claude --plugin-dir "$PM"` with that MCP server enabled, then ask a PM skill that
 needs it (`/pm-backlog-sync` for Jira or Linear; `/pm-status` for Confluence, Notion, Slack, Gmail or Outlook).
 
 | Connection | Check |
@@ -221,20 +211,20 @@ On a scratch Jira project (key, for example, `KAN`) with a fresh fixture copy:
    Delete the page and re-run: it must ask create-new / export / cancel, never recreate on its own. A permission or
    network error must be reported as a failure, not as "not found".
 
-### 2.4 `/pm-discover` → `/sdd-shape` project-name confirmation (DS-02, DS-04)
+### 2.4 `/pm-discover` → `/pm-shape` project-name confirmation (DS-02, DS-04)
 
 1. **DS-02:** in a copy of the fixture, add `context/foundation/recipe-fridge/research/2026-10-12-fridge-habits.md`
    with a `## Seed for shaping` section; delete `prd.md` and `roadmap.md` (there is no `shape-notes.md` in the fixture).
    Run `/pm-discover`, confirm the project, answer yes at the gate. Expect the skill to tell you which project name to
-   confirm in `/sdd-shape` and to call it with `@<path of the research file>`. **Fail** if `/sdd-shape` starts without
+   confirm in `/pm-shape` and to call it with `@<path of the research file>`. **Fail** if `/pm-shape` starts without
    the path, without your yes, or without the project-name hint.
-2. **DS-04:** in `/sdd-shape` choose **Rename** and type a different name (for example `fridge-planner`). After it returns,
+2. **DS-04:** in `/pm-shape` choose **Rename** and type a different name (for example `fridge-planner`). After it returns,
    expect the skill to notice the slug mismatch, ask whether to move the research next to the product, and move nothing
    before your answer. On yes it runs `git mv` of the `research/` folder and says the move is staged, not committed. On
    "leave it" nothing moves.
 
 ### Sign-off
 
-Record the date, the host and version, the `sdd-skills` version (must be 0.4.1, or run
-`bash scripts/check-sdd-contract.sh "$SDD"` first), and any failed item with the skill's exact output. File failures as
+Record the date, the host and version, the source commit recorded in `VENDORED.md` (or run
+`bash scripts/check-upstream.sh /path/to/source-checkout` first and note any change it reports), and any failed item with the skill's exact output. File failures as
 issues against the owning skill before tagging; the `v0.1.0` tag is created after the release branch is merged to main.

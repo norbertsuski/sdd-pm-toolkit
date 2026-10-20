@@ -18,7 +18,7 @@ The shape this skill addresses is general: the user describes something (an obse
 
 This skill is the framing step. Planning answers _how to build it_. /pm-frame answers _what's actually the right thing to plan_.
 
-Writes only: `$CONTEXT_ROOT/foundation/<slug>/frame-<YYYY-MM-DD>-<topic>.md` (the Frame Brief). It never writes under `changes/` or `archive/` (those belong to a developer's workflow), never writes a plan, and never edits code.
+Writes only: `$CONTEXT_ROOT/foundation/<slug>/frame-<YYYY-MM-DD>-<topic>.md` (the Frame Brief; the `foundation/<slug>/` folder is created if the project has none yet), the per-operator `.sdd.local.yml` and its `.gitignore` line. It never writes under `changes/` or `archive/` (those belong to a developer's workflow), never writes a plan, and never edits code.
 
 This skill resolves `CONTEXT_ROOT` per `../pm-help/references/context-resolution.md` (discovery, then the one-line pick when several roots exist; if no root exists it offers `/pm-init`). `app:` may be absent for flat roots; do not require it. It resolves its own `audience` per `../pm-help/references/plain-language.md` (`## Audience resolution`: read `$CONTEXT_ROOT/.sdd.local.yml`, else ask once and write there, after making sure `$CONTEXT_ROOT/.gitignore` contains a `.sdd.local.yml` line; default `plain`). When `plain`, questions, the dimension map and the hand-off are given in plain language (no `file:line` dumps, no "hypothesis table" talk, no schema words) — the Frame Brief written to disk is identical in both modes.
 

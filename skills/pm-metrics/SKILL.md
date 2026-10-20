@@ -28,7 +28,7 @@ measures, the guardrails or the tracking plan spelled out, or an earlier `metric
 PRD changed.
 
 **Skip when** there is no PRD yet (`/pm-discover`), the Success Criteria need rewriting rather than measuring (that
-is a PRD edit: `/pm-prd-review` for an approved single-section fix, or `/sdd-prd`), or the question is about
+is a PRD edit: `/pm-prd-review` for an approved single-section fix, or `/pm-prd`), or the question is about
 priorities or dates (`/pm-prioritize`, `/pm-forecast`).
 
 ## Relationship to other skills
@@ -36,14 +36,14 @@ priorities or dates (`/pm-prioritize`, `/pm-forecast`).
 - `/pm-prd-review` — usually runs first. It checks that Primary criteria carry a number, a population and a window;
   this skill works either way, and writes `TBD — Owner: <role>` where the PRD is silent. When `metrics.md` exists,
   the review's Measurability dimension reads it, so its headings and table headers below are fixed.
-- `/sdd-prd` — owns `prd.md`. This skill reads it and never edits it; a vague criterion is reported, not fixed.
-- `/sdd-roadmap` (through `/pm-discover`, which handles the stack step) — the next step. The roadmap's north star is a
+- `/pm-prd` — owns `prd.md`. This skill reads it and never edits it; a vague criterion is reported, not fixed.
+- `/pm-roadmap` (through `/pm-discover`, which routes through the developers' technology choice) — the next step. The roadmap's north star is a
   *slice*; the north-star *metric* here is a measure. They are related, not the same thing.
 - `/pm-help` — the map of the PM flow.
 
 Shared rules, linked rather than restated: finding the root and the project —
 `../pm-help/references/context-resolution.md`; the contract check and PRD headings —
-`../pm-help/references/sdd-contract.md`; audience and plain language —
+`../pm-help/references/artifact-contract.md`; audience and plain language —
 `../pm-help/references/plain-language.md`; where `metrics.md` sits among the PM artifacts —
 `../pm-help/references/pm-artifacts.md`; the file layout, naming rules and self-check —
 `references/metrics-format.md`; behavior fixtures — `references/eval-cases.md`.
@@ -53,7 +53,7 @@ Shared rules, linked rather than restated: finding the root and the project —
 1. **A project name or a path to a `prd.md`** → use that PRD.
 2. **Nothing given** → resolve the project (Step 1) and use its `prd.md`.
 3. **A request to change the PRD's criteria** ("make the target 70%") → say the PRD is edited through
-   `/pm-prd-review` or `/sdd-prd`; offer to record the number as a *target in the mapping* (with the PM as source)
+   `/pm-prd-review` or `/pm-prd`; offer to record the number as a *target in the mapping* (with the PM as source)
    instead, and carry on.
 
 Say what is about to happen in one or two sentences, for example: "I'll read your success criteria and stories,
@@ -62,7 +62,7 @@ I can't take from the PRD I'll ask you; if you don't know yet, I'll leave it mar
 
 ## Process
 
-Facilitation style (as the `sdd-*` skills do): recommended option first, marked "(Recommended)", always a
+Facilitation style (as the other `pm-*` skills do): recommended option first, marked "(Recommended)", always a
 "Not sure" option, one decision at a time, echo back and confirm before anything is written, never invent content.
 
 ### Step 1 — Audience, root and project
@@ -77,7 +77,7 @@ Facilitation style (as the `sdd-*` skills do): recommended option first, marked 
 
 ### Step 2 — Contract check (STOP on mismatch)
 
-Run the `## Contract check procedure` in `../pm-help/references/sdd-contract.md` on `prd.md` before reading anything else
+Run the `## Contract check procedure` in `../pm-help/references/artifact-contract.md` on `prd.md` before reading anything else
 from it: read `context_type` from the frontmatter, pick `prd-greenfield` or `prd-brownfield`, test every heading for an
 exact whole-line match. A missing or unknown `context_type` counts as a mismatch on `context_type:`.
 
@@ -87,7 +87,7 @@ the `## Success Criteria` heading and the next `##` heading. Any heading or subs
 STOP: no questions, no draft, no file, no guessing.
 
 ```
-CONTRACT MISMATCH: prd.md missing ### Primary, ### Guardrails; sdd-skills expected 0.4.1
+CONTRACT MISMATCH: prd.md missing ### Primary, ### Guardrails
 ```
 
 (names comma-separated, each with its `##` or `###` prefix). Plain mode says it in words (the product write-up has no
@@ -264,7 +264,7 @@ success measures were mapped and how many are still open (a count, in words), th
 count of events), and the next step in product terms: if open questions remain on the main success measures, go back to the product
 write-up first (`/pm-prd-review`); otherwise on to the technology decision and the build plan (`/pm-discover`). Technical mode prints
 the file path, the number of TBD cells and open questions, and the exact next command (`/pm-prd-review` to resume, or `/pm-discover`,
-or `/sdd-roadmap` once the stack step is done). Confirm a skill is in the host's available list before naming it. Do not start the
+or `/pm-roadmap` once the developers' technology choice is made). Confirm a skill is in the host's available list before naming it. Do not start the
 next skill.
 
 ## Output

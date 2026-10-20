@@ -1,7 +1,7 @@
 {
   "name": "sdd-pm-skills",
   "version": "0.1.0",
-  "description": "Product-manager skills on top of the SDD (sdd-skills) workflow",
+  "description": "Product-manager skills for the whole product flow: setup, research, discovery, framing, shaping, PRD, review, metrics, roadmap, backlog, forecast and status",
   "author": {
     "name": "Norbert Suski"
   },

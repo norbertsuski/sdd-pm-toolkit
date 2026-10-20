@@ -7,7 +7,7 @@ description: >
   REJECTED verdict, a saved report, and an interactive triage where each finding can be fixed in prd.md (diff
   shown first, one finding at a time), moved to Open Questions, dismissed with a reason, or deferred. May set the
   PRD to status reviewed once everything is resolved; never locks it. The only PM skill allowed to edit prd.md.
-  Use after /sdd-prd and before /sdd-roadmap. Trigger phrases: "review the PRD", "review my PRD", "is this PRD
+  Use after /pm-prd and before /pm-roadmap. Trigger phrases: "review the PRD", "review my PRD", "is this PRD
   good", "check the product requirements", "prd review", "audit the requirements", "is the PRD ready for the
   roadmap", "przejrzyj PRD", "zrecenzuj PRD", "sprawdź wymagania produktowe", "czy PRD jest gotowe",
   "ocena PRD", "recenzja PRD".
@@ -27,27 +27,25 @@ Two modes:
 
 ## When to use, when to skip
 
-**Use when** a `prd.md` exists (typically `status: draft`, right after `/sdd-prd`) and the person wants it
+**Use when** a `prd.md` exists (typically `status: draft`, right after `/pm-prd`) and the person wants it
 checked, or a saved review has findings left to triage.
 
 **Skip when** there is no PRD yet (`/pm-discover`), the question is about the build plan rather than the write-up
-(`/pm-status`, or `/sdd-plan-review` for a technical plan), or the person wants the PRD *rewritten* (that is
-`/sdd-prd`; this skill only applies approved, single-section edits).
+(`/pm-status`; a technical plan is reviewed by developers), or the person wants the PRD *rewritten* (that is
+`/pm-prd`; this skill only applies approved, single-section edits).
 
 ## Relationship to other skills
 
-- `/sdd-prd` — writes `prd.md`. This skill never regenerates it; it edits sections in place when a finding is approved.
+- `/pm-prd` — writes `prd.md`. This skill never regenerates it; it edits sections in place when a finding is approved.
 - `/pm-discover` — the router. It sends a PRD here until it counts as reviewed: `status` is `reviewed` or `locked`, or the
   latest `prd-review-*.md` has `verdict: APPROVED`. A latest report with `NEEDS_ATTENTION` or `REJECTED` keeps it here.
 - `/pm-metrics` — may later write `metrics.md`; when that file exists this skill uses it for Measurability, when it does not
   that is not a finding.
-- `/sdd-roadmap` — the next sdd step after the review and the stack step. This skill never starts it.
-- `sdd-plan-review` (in `sdd-skills`) is the model for the shape of this skill (verdicts, findings, triage); it reviews
-  technical plans, this one reviews PRDs.
+- `/pm-roadmap` — the next step after the review and the developers' technology choice. This skill never starts it.
 
 Shared rules, linked rather than restated: finding the root and the project —
 `../pm-help/references/context-resolution.md`; the contract check and PRD headings —
-`../pm-help/references/sdd-contract.md`; audience and plain language —
+`../pm-help/references/artifact-contract.md`; audience and plain language —
 `../pm-help/references/plain-language.md`; where the report sits among the PM artifacts —
 `../pm-help/references/pm-artifacts.md`; dimensions, rubrics and finding rules —
 `references/review-dimensions.md`; behavior fixtures — `references/eval-cases.md`.
@@ -62,7 +60,7 @@ Shared rules, linked rather than restated: finding the root and the project —
 
 ## Process
 
-Facilitation style (as the `sdd-*` skills do): recommended option first, marked "(Recommended)", always a
+Facilitation style (as the other `pm-*` skills do): recommended option first, marked "(Recommended)", always a
 "Not sure" option, one decision at a time, show before write, never invent content.
 
 ### Step 1 — Audience, root and project
@@ -77,19 +75,19 @@ Facilitation style (as the `sdd-*` skills do): recommended option first, marked 
 
 ### Step 2 — Contract check (STOP on mismatch)
 
-Run the `## Contract check procedure` in `../pm-help/references/sdd-contract.md` on `prd.md` before reading anything else from it:
+Run the `## Contract check procedure` in `../pm-help/references/artifact-contract.md` on `prd.md` before reading anything else from it:
 read `context_type` from the frontmatter, pick `prd-greenfield` or `prd-brownfield`, test every heading for an exact
 whole-line match. A missing or unknown `context_type` counts as a mismatch on `context_type:`.
 
 Any heading missing → print one line and STOP; no review, no report, no edits, no guessing:
 
 ```
-CONTRACT MISMATCH: prd.md missing ## Non-Goals; sdd-skills expected 0.4.1
+CONTRACT MISMATCH: prd.md missing ## Non-Goals
 ```
 
 (headings comma-separated). Plain mode says it in words (the product write-up is missing sections the next steps rely
 on, please re-run the PRD step) and keeps the exact line for the technical log. For a hand-edited PRD with a renamed
-heading, the fix is the person's, or `/sdd-prd`'s; this skill does not repair headings.
+heading, the fix is the person's, or `/pm-prd`'s; this skill does not repair headings.
 
 ### Step 3 — Read
 
@@ -209,7 +207,7 @@ Decision: PENDING
 ```
 
 `verdict` is one of `APPROVED`, `NEEDS_ATTENTION`, `REJECTED` (this skill's own enum, with an underscore; unrelated to the
-`NEEDS ATTENTION` that sdd writes on change reviews). `Decision` is `PENDING`, `FIXED (option n)`, `MOVED (Open Question n)`,
+`NEEDS ATTENTION` that developers' review tooling writes on change reviews). `Decision` is `PENDING`, `FIXED (option n)`, `MOVED (Open Question n)`,
 `DISMISSED`, or `DEFERRED`.
 
 **A file with today's date already exists** → ask: "Overwrite it (keeps its `created`) / Save as `prd-review-<date>-2.md`
@@ -335,7 +333,7 @@ Never writes `shape-notes.md` or `roadmap.md`.
 8. **Dismissal needs a reason; deferral stays visible.** A dismissed finding keeps its reason in the log; a deferred one still counts toward the verdict.
 9. **No silent overwrite.** A same-date report triggers the overwrite or `-2` question.
 10. **Own files only.** Writes `prd-review-*.md`, the approved sections of `prd.md`, and `audience:` in `.sdd.local.yml`. `changes/**`, `archive/**` and `prd-vN.md` are never touched.
-11. **Never chain.** Do not start `/pm-discover`, `/sdd-roadmap` or any other skill; the human decides.
+11. **Never chain.** Do not start `/pm-discover`, `/pm-roadmap` or any other skill; the human decides.
 12. **Mirror the user's language.** Findings and questions follow the user's language; quotes stay as written in the PRD; headings and enum values stay English.
 13. **No source/quote text on a command line.** Quote checks are done by Read and compare; a shell search, if unavoidable, takes the quote from a scratch file via `grep -F -f <file>`.
 

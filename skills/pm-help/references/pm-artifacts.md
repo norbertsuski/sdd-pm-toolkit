@@ -6,7 +6,7 @@ Common frontmatter for every dated artifact: `project`, `created`, `updated`.
 
 `shape-notes.md`, `prd.md` and `roadmap.md` are written by `pm-shape`, `pm-prd` and `pm-roadmap`; `pm-prd-review` may also edit
 `prd.md` (per-finding approval, may set `status: reviewed`). `changes/**` and `archive/**`
-are never written by the skills listed below; a developer's archive step sets a roadmap item `done` and appends to `## Done`. See `sdd-contract.md` for the format of the shared artifacts.
+are never written by the skills listed below; a developer's archive step sets a roadmap item `done` and appends to `## Done`. See `artifact-contract.md` for the format of the shared artifacts.
 
 | Path | Written by | Frontmatter | Required headings |
 |---|---|---|---|

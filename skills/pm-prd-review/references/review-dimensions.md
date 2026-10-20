@@ -150,7 +150,7 @@ Evidence: quote the requirement line (with its FR id) and say which sections wer
 Question: what is still unknown, who owns it, and what does it hold up?
 
 An open question is well formed when it is a question, has an owner, has an `By:` date and a `Block:` flag
-(`Block: yes` gates the PRD, see `../../pm-help/references/sdd-contract.md`).
+(`Block: yes` gates the PRD, see `../../pm-help/references/artifact-contract.md`).
 
 - **PASS** — every question is well formed; any `Block: yes` question names (in its text or in the requirement
   it touches) what it gates, and its `By:` date leaves room before `timeline_budget.hard_deadline`; no requirement

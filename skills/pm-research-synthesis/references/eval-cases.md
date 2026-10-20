@@ -2,8 +2,8 @@
 
 Behavioral prompt fixtures for `pm-research-synthesis`. The fixture project is
 `tests/fixtures/flat-root/context/` (project `recipe-fridge`); transcripts are short text files you place next to
-the scratch copy. To try one by hand, copy the fixture into a scratch git repo and run Claude Code with both
-plugins loaded (see the README, "Local testing"). Every case also implies the guardrails in `SKILL.md`
+the scratch copy. To try one by hand, copy the fixture into a scratch git repo and run Claude Code with the
+plugin loaded (see the README, "Local testing"). Every case also implies the guardrails in `SKILL.md`
 (verbatim quotes only, confirm before write, no invented evidence).
 
 | ID | Given | Invoke | Expected |

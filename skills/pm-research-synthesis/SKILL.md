@@ -4,7 +4,7 @@ description: >
   Turn raw user research — interview transcripts, notes, survey exports (CSV), pasted text — into an
   evidence-linked insights file: every insight cites verbatim quotes with source ids, participants are
   pseudonymized, and a "Seed for shaping" section (in the participants' own words) is ready to feed
-  /sdd-shape through pm-discover. Use BEFORE pm-discover when the user has research, not in place of it.
+  /pm-shape through pm-discover. Use BEFORE pm-discover when the user has research, not in place of it.
   Never invents quotes, counts or participants. Trigger phrases: "synthesize research", "summarize
   interviews", "analyze these transcripts", "what did users say", "find insights in this survey",
   "affinity map", "jobs to be done from interviews", "research synthesis", "zsyntetyzuj badania",
@@ -30,9 +30,9 @@ patterns, jobs to be done, pains and gains, or a starting point for shaping a pr
 ## Relationship to other skills
 
 - `/pm-discover` — the next step. It takes the `## Seed for shaping` section of the file this skill writes and
-  hands it to `/sdd-shape` as the starting idea.
-- `/sdd-shape` — owned by `sdd-skills`. This skill never calls it and never writes its files. The `research/`
-  folder it creates is safe: `sdd-shape` only treats a project folder as a prior session when `shape-notes.md` exists.
+  hands it to `/pm-shape` as the starting idea.
+- `/pm-shape` — owns `shape-notes.md`. This skill never calls it and never writes its files. The `research/`
+  folder it creates is safe: `pm-shape` only treats a project folder as a prior session when `shape-notes.md` exists.
 - `/pm-help` — the map of the PM flow.
 
 Shared rules, linked rather than restated: finding the root and the project —
@@ -60,7 +60,7 @@ Tip: more than one source helps. A finding backed by one person is flagged as we
 
 ## Process
 
-Facilitation style (as the `sdd-*` skills do): recommended option first, marked "(Recommended)", always a
+Facilitation style (as the other `pm-*` skills do): recommended option first, marked "(Recommended)", always a
 "Not sure" option, one question at a time, echo back and confirm before anything is written.
 
 ### Step 1 — Audience, root and project
@@ -68,7 +68,7 @@ Facilitation style (as the `sdd-*` skills do): recommended option first, marked 
 1. Resolve the audience per `../pm-help/references/plain-language.md` (ask once if `audience:` is absent). In plain
    mode say "findings" for insights and "what they were trying to get done" for jobs; the file itself is identical.
 2. Resolve `CONTEXT_ROOT` and the project per `../pm-help/references/context-resolution.md`. No root found → recommend
-   `/sdd-init` and stop; this skill does not scaffold a root.
+   `/pm-init` and stop; this skill does not scaffold a root.
 3. **No project folder yet** (new project): ask for the project name, propose the slug (lowercase, each run of
    non-alphanumeric characters replaced by one `-`, leading/trailing `-` trimmed), and confirm it. Nothing is
    created until Step 7. Several projects → ask which; a project the user named wins.
@@ -154,7 +154,7 @@ Plain mode ends with the handoff block from `../pm-help/references/plain-languag
 findings and sources, the weakest and strongest in a phrase), what was saved (in words, no path), and that the
 next step is turning this into a shaped product idea (`/pm-discover`). Technical mode prints the file path and
 the exact next command. Before naming `/pm-discover`, confirm it is among the host's available skills; if it is
-not, say so and offer to paste the Seed for shaping into `/sdd-shape` yourself. Do not start the next skill.
+not, say so and offer to paste the Seed for shaping into `/pm-shape` yourself. Do not start the next skill.
 
 ## Output
 

@@ -85,10 +85,10 @@ Then wait.
 
 ### Step 0: Check the context-root precondition & resolve CONTEXT_ROOT
 
-Resolve `CONTEXT_ROOT` per `../pm-help/references/context-resolution.md`: run **discovery** (`## Discovery`) to
+Resolve `CONTEXT_ROOT` per `../pm-help/references/context-resolution.md`: run **discovery** (`## Step 1 — discover roots`) to
 find every `context/` root marked by a `.sdd.yml`, excluding vendor/build dirs.
 
-- **One or more roots found** — present the pick per the reference's `## Resolution algorithm`
+- **One or more roots found** — present the pick per the reference's `## Step 2 — classify and pick`
   (list each root's path and layout, pre-select the one nearest cwd, let the user confirm or choose
   another), then set `CONTEXT_ROOT` per that root's layout (flat → the root itself; legacy → the
   root plus the resolved `<app>`). Proceed to Step 0.4. (Per-app `foundation/` folders are created
@@ -193,7 +193,7 @@ On confirm (or after the user renames), derive the final slug, create the folder
 mkdir -p "$CONTEXT_ROOT/foundation/<project-slug>"
 ```
 
-Set **`ACTIVE_SHAPE_PATH` = `$CONTEXT_ROOT/foundation/<project-slug>/shape-notes.md`**. Every subsequent phase write targets this path (when later steps say "write to `shape-notes.md`", they mean `ACTIVE_SHAPE_PATH`). Write the initial frontmatter scaffold here now, with `project: '<name>'` already populated (`project` is no longer `null` — the name is known), plus the `checkpoint:` block; `context_type` and `delivery_mode` are filled in by Step 0.7. `audience` is NEVER written into this scaffold — it is a per-operator preference resolved fresh each session per Step 0.4, not a committed field. Gate the `app:` field on the resolved root's layout (per `../pm-help/references/context-resolution.md`, "Frontmatter rule"): write `app: <app>` only when `CONTEXT_ROOT` resolved to a **legacy** root (the `<app>` segment folded into `CONTEXT_ROOT` during Step 0). _(Fallback: repos with no workspace layout — i.e. a flat `CONTEXT_ROOT` — omit the `app:` line.)_
+Set **`ACTIVE_SHAPE_PATH` = `$CONTEXT_ROOT/foundation/<project-slug>/shape-notes.md`**. Every subsequent phase write targets this path (when later steps say "write to `shape-notes.md`", they mean `ACTIVE_SHAPE_PATH`). Write the initial frontmatter scaffold here now, with `project: '<name>'` already populated (`project` is no longer `null` — the name is known), plus the `checkpoint:` block; `context_type` and `delivery_mode` are filled in by Step 0.7. `audience` is NEVER written into this scaffold — it is a per-operator preference resolved fresh each session per Step 0.4, not a committed field. Gate the `app:` field on the resolved root's layout (per `../pm-help/references/context-resolution.md`, `## Step 2 — classify and pick`: flat roots omit `app:`): write `app: <app>` only when `CONTEXT_ROOT` resolved to a **legacy** root (the `<app>` segment folded into `CONTEXT_ROOT` during Step 0). _(Fallback: repos with no workspace layout — i.e. a flat `CONTEXT_ROOT` — omit the `app:` line.)_
 
 If `$CONTEXT_ROOT/foundation/<project-slug>/shape-notes.md` already exists, do not overwrite — treat it as a resume candidate and return to Step 0.5's resume offer for that file.
 

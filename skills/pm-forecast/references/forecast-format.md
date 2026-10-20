@@ -95,8 +95,8 @@ say the pace is too slow to forecast.
 
 ```markdown
 No forecast yet: <the script's `reason`>. A forecast needs at least 3 finished changes that were archived
-with a date, spread over at least 3 complete calendar weeks, with something finished in them. Archive each
-finished change with `/sdd-archive` (it stamps the date), then run `/pm-forecast` again.
+with a date, spread over at least 3 complete calendar weeks, with something finished in them. Have each
+finished change archived (the archive step stamps the date), then run `/pm-forecast` again.
 ```
 
 `items left: 0` with `ok` → "Nothing is left to deliver on the roadmap; the forecast is today."

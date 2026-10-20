@@ -1,7 +1,7 @@
 # tracker-map.md format, issue mapping and sync rules
 
 `$CONTEXT_ROOT/foundation/<slug>/tracker-map.md` is the only place that remembers which roadmap item became which
-tracker issue. Issue keys are never written into `roadmap.md` (it belongs to `/sdd-roadmap`). The file is written by
+tracker issue. Issue keys are never written into `roadmap.md` (it belongs to `/pm-roadmap`). The file is written by
 `pm-backlog-sync` only; a person may edit it by hand to repair a mapping (for example after a relink).
 
 ## Frontmatter

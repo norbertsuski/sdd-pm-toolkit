@@ -17,6 +17,12 @@ fail=0
 err() { echo "FAIL: $*"; fail=1; }
 ok()  { echo "  ok: $*"; }
 
+# Upstream-reference pattern (see check 25), assembled from pieces so that this
+# file does not match its own check.
+_s=sdd
+UPSTREAM_RE="${_s}-toolkit|${_s}-skills|/${_s}-[a-z]|${_s}-contract"
+READY_LIT='Ready for `/'"${_s}"'-plan`'   # the Backlog Handoff column-header literal (a file-format string)
+
 # JSON field reader: json_get <file> <python-expression-on-d>; prints result or nothing.
 json_get() {
   python3 -c 'import json,sys
@@ -112,16 +118,16 @@ ok "relative .md links in SKILL.md files resolve"
 
 # --- 8. pm-help shared references exist ---------------------------------
 HELP_REFS=skills/pm-help/references
-for f in context-resolution sdd-contract pm-artifacts integrations plain-language eval-cases; do
+for f in context-resolution artifact-contract pm-artifacts integrations plain-language eval-cases; do
   [[ -f "$HELP_REFS/$f.md" ]] || err "missing shared reference: $HELP_REFS/$f.md"
 done
 [[ -f skills/pm-help/SKILL.md ]] || err "missing skills/pm-help/SKILL.md"
 ok "pm-help shared reference files checked"
 
-# --- 9. sdd-contract.md: pinned version, headings, parseable blocks -----
-CONTRACT="$HELP_REFS/sdd-contract.md"
+# --- 9. artifact-contract.md: headings, parseable blocks, no install/required-skills sections ---
+CONTRACT="$HELP_REFS/artifact-contract.md"
 # contract_block <name>: strings between <!-- name:start --> and <!-- name:end -->.
-# Extraction rule (shared with scripts/check-sdd-contract.sh): one entry per line
+# Extraction rule (shared with scripts/check-upstream.sh): one entry per line
 # in the form  - `<string>` ; the string is everything between the first "- `"
 # and the LAST backtick on the line (so strings may contain backticks).
 contract_block() {
@@ -131,24 +137,27 @@ contract_block() {
     on' "$CONTRACT" | sed -n -E 's/^- `(.*)`[[:space:]]*$/\1/p'
 }
 if [[ -f "$CONTRACT" ]]; then
-  grep -qF "sdd_skills_version: 0.4.1" "$CONTRACT" \
-    || err "sdd-contract.md must contain 'sdd_skills_version: 0.4.1'"
-  for h in "## Version" "## Install block" "## Required skills" "## PRD contract" \
-           "## Roadmap contract" "## Change contract" "## Contract check procedure"; do
-    grep -qxF -- "$h" "$CONTRACT" || err "sdd-contract.md missing heading: $h"
+  for h in "## Marker-block extraction rule" "## PRD contract" "## Roadmap contract" "## Change contract" \
+           "## Shape checkpoint contract" "## Stack signals" "## Contract check procedure"; do
+    grep -qxF -- "$h" "$CONTRACT" || err "artifact-contract.md missing heading: $h"
   done
+  for h in "## Install block" "## Required skills" "## Version"; do
+    grep -qxF -- "$h" "$CONTRACT" && err "artifact-contract.md must not have the section: $h"
+  done
+  grep -qF 'CONTRACT MISMATCH: <file> missing <comma-separated headings>' "$CONTRACT" \
+    || err "artifact-contract.md must define the line 'CONTRACT MISMATCH: <file> missing <comma-separated headings>'"
   for b in prd-greenfield:10 prd-brownfield:11 roadmap:10 roadmap-columns:1 change-keys:7 change-verdicts:5 prd-frontmatter:1; do
     bname=${b%%:*}; bmin=${b##*:}
     bn=$(contract_block "$bname" | wc -l | tr -d ' ')
     grep -qxF "<!-- $bname:start -->" "$CONTRACT" && grep -qxF "<!-- $bname:end -->" "$CONTRACT" \
-      || err "sdd-contract.md missing markers for block '$bname'"
-    [[ "$bn" -ge "$bmin" ]] || err "sdd-contract.md block '$bname' has $bn entries (expected >= $bmin)"
+      || err "artifact-contract.md missing markers for block '$bname'"
+    [[ "$bn" -ge "$bmin" ]] || err "artifact-contract.md block '$bname' has $bn entries (expected >= $bmin)"
   done
   [[ "$(contract_block prd-greenfield | wc -l | tr -d ' ')" -eq 10 ]] || err "prd-greenfield block must have exactly 10 headings"
   [[ "$(contract_block prd-brownfield | wc -l | tr -d ' ')" -eq 11 ]] || err "prd-brownfield block must have exactly 11 headings"
-  ok "sdd-contract.md pinned to 0.4.1 with parseable blocks"
+  ok "artifact-contract.md headings and parseable blocks checked"
 else
-  err "sdd-contract.md missing ($CONTRACT)"
+  err "artifact-contract.md missing ($CONTRACT)"
 fi
 
 # --- 10. pm-help/SKILL.md: installed count, mentions every other skill --
@@ -277,14 +286,13 @@ if [[ -f "$RS/SKILL.md" ]]; then
 fi
 ok "pm-research-synthesis files, headings and eval ids checked"
 
-# --- 15. pm-discover: files, routed sdd skills, git mv, stack gate, eval ids, contract blocks
+# --- 15. pm-discover: files, routed pm skills, git mv, stack gate, eval ids, contract blocks
 PD=skills/pm-discover
 for f in SKILL.md references/eval-cases.md; do
   [[ -f "$PD/$f" ]] || err "missing $PD/$f"
 done
 if [[ -f "$PD/SKILL.md" ]]; then
-  for s in '/sdd-init' '/sdd-frame' '/sdd-shape' '/sdd-prd' '/pm-prd-review' '/sdd-roadmap' \
-           '/sdd-tech-stack-selector' '/sdd-stack-assess' '/sdd-health-check' \
+  for s in '/pm-init' '/pm-frame' '/pm-shape' '/pm-prd' '/pm-prd-review' '/pm-roadmap' \
            'git mv' 'checkpoint.current_phase' 'stack-pending' 'verdict: APPROVED'; do
     grep -qF -- "$s" "$PD/SKILL.md" || err "pm-discover/SKILL.md must mention '$s'"
   done
@@ -298,9 +306,9 @@ if [[ -f "$CONTRACT" ]]; then
   for b in shape-checkpoint:4 stack-signals:2; do
     bname=${b%%:*}; bmin=${b##*:}
     grep -qxF "<!-- $bname:start -->" "$CONTRACT" && grep -qxF "<!-- $bname:end -->" "$CONTRACT" \
-      || err "sdd-contract.md missing markers for block '$bname'"
+      || err "artifact-contract.md missing markers for block '$bname'"
     [[ "$(contract_block "$bname" | wc -l | tr -d ' ')" -ge "$bmin" ]] \
-      || err "sdd-contract.md block '$bname' has fewer than $bmin entries"
+      || err "artifact-contract.md block '$bname' has fewer than $bmin entries"
   done
 fi
 ok "pm-discover files, routed skills, stack gate, eval ids and contract blocks checked"
@@ -369,9 +377,9 @@ if [[ -f "$PM/references/eval-cases.md" ]]; then
 fi
 if [[ -f "$CONTRACT" ]]; then
   grep -qxF "<!-- prd-success-criteria:start -->" "$CONTRACT" && grep -qxF "<!-- prd-success-criteria:end -->" "$CONTRACT" \
-    || err "sdd-contract.md missing markers for block 'prd-success-criteria'"
+    || err "artifact-contract.md missing markers for block 'prd-success-criteria'"
   [[ "$(contract_block prd-success-criteria | wc -l | tr -d ' ')" -eq 3 ]] \
-    || err "sdd-contract.md block 'prd-success-criteria' must have exactly 3 entries"
+    || err "artifact-contract.md block 'prd-success-criteria' must have exactly 3 entries"
   if [[ -f "$FPRD" ]]; then
     while IFS= read -r h; do
       grep -qxF -- "$h" "$FPRD" || err "fixture prd.md missing Success Criteria subsection: $h"
@@ -403,7 +411,7 @@ if [[ -f "$PP/references/frameworks.md" ]]; then
 fi
 if [[ -f "$PP/SKILL.md" ]]; then
   for s in 'python3 -c' 'CONTRACT MISMATCH' 'Contract check procedure' '## Dependency Conflicts' \
-           '## Proposed Sequence Changes' 'MoSCoW' 'Overwrite' '/sdd-roadmap' 'person-weeks' 'update the plan with these priorities'; do
+           '## Proposed Sequence Changes' 'MoSCoW' 'Overwrite' '/pm-roadmap' 'person-weeks' 'update the plan with these priorities'; do
     grep -qF -- "$s" "$PP/SKILL.md" || err "pm-prioritize/SKILL.md must mention '$s'"
   done
 fi
@@ -571,7 +579,7 @@ if [[ -f "$PS/references/status-format.md" ]]; then
   done
 fi
 if [[ -f "$PS/SKILL.md" ]]; then
-  for s in '../pm-help/references/integrations.md' 'draft' '/sdd-project-run --status' 'CONTRACT MISMATCH' \
+  for s in '../pm-help/references/integrations.md' 'draft' 'authoritative' 'CONTRACT MISMATCH' \
            'Contract check procedure' 'status_page' 'Export file instead' 'Apply' 'NEEDS ATTENTION' 'REJECTED' \
            '- **Decision**: PENDING' 'pm-status:age-script' 'single-quoted heredoc' 'never interpolated' \
            'p50-after-deadline' 'p85-after-deadline' 'exports/<date>-status.md' 'exports/<date>-status.txt' \
@@ -607,12 +615,12 @@ for s in $VEND; do
 done
 # no reference to the upstream repo/plugin or its commands in the vendored files or the shared refs they use
 for f in skills/pm-init skills/pm-shape skills/pm-prd; do
-  if [[ -d "$f" ]] && grep -rnE 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-' "$f"; then
+  if [[ -d "$f" ]] && grep -rnE "$UPSTREAM_RE|\.\./${_s}-" "$f"; then
     err "$f contains a reference to the upstream repo/plugin or a /sdd- command"
   fi
 done
 for f in prd-schema plain-language context-resolution; do
-  if [[ -f "$HELP_REFS/$f.md" ]] && grep -nE 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-' "$HELP_REFS/$f.md"; then
+  if [[ -f "$HELP_REFS/$f.md" ]] && grep -nE "$UPSTREAM_RE|\.\./${_s}-" "$HELP_REFS/$f.md"; then
     err "$HELP_REFS/$f.md contains a reference to the upstream repo/plugin or a /sdd- command"
   fi
 done
@@ -667,18 +675,18 @@ for s in pm-roadmap pm-frame pm-map; do
   grep -q "^description:" "$d/SKILL.md" || err "$s/SKILL.md has no description"
   [[ -f "$d/references/eval-cases.md" ]] || err "missing $d/references/eval-cases.md"
   # no upstream repo/plugin/command reference; the allowed token is the roadmap column-header literal
-  if [[ -d "$d" ]] && grep -rhn -v '^$' "$d" | sed 's/Ready for `\/sdd-plan`//g' | grep -E 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-|\.claude/skills/sdd-'; then
+  if [[ -d "$d" ]] && grep -rhn -v '^$' "$d" | sed "s|${READY_LIT}||g" | grep -E "$UPSTREAM_RE|\.\./${_s}-|\.claude/skills/${_s}-"; then
     err "$d contains a reference to the upstream repo/plugin or a /sdd- command"
   fi
 done
 for f in skills/pm-map/render-roadmap-map.sh skills/pm-map/roadmap-map-hook.sh; do
   [[ -f "$f" ]] || { err "missing $f"; continue; }
   [[ -x "$f" ]] || err "$f must be executable"
-  grep -nE 'sdd-|/sdd' "$f" && err "$f contains an sdd- string"
+  grep -nE "${_s}-|/${_s}" "$f" && err "$f contains an upstream-name string"
 done
 RMS=skills/pm-roadmap/SKILL.md
 if [[ -f "$RMS" ]]; then
-  grep -qF '| Roadmap ID | Change ID              | Suggested issue title         | Ready for `/sdd-plan` | Notes                       |' "$RMS" \
+  grep -qF "| Roadmap ID | Change ID              | Suggested issue title         | ${READY_LIT} | Notes                       |" "$RMS" \
     || err "pm-roadmap/SKILL.md must keep the Backlog Handoff header row byte-identical"
   for h in '## Vision recap' '## North star' '## At a glance' '## Baseline' '## Foundations' '## Slices' \
            '## Backlog Handoff' '## Open Roadmap Questions' '## Parked' '## Done'; do
@@ -742,6 +750,50 @@ for s in /pm-roadmap /pm-frame /pm-map; do
 done
 grep -qF 'Installed in this plugin (15)' skills/pm-help/SKILL.md || err "pm-help/SKILL.md must say 'Installed in this plugin (15)'"
 ok "vendored pm-roadmap, pm-frame, pm-map, map scripts, render test, eval ids and registry checked"
+
+# --- 25. no reference to the upstream repo/plugin or its commands (repo-wide) -----
+# Scans every tracked file except VENDORED.md, scripts/check-upstream.sh and docs/superpowers/**.
+# Allowed tokens are deleted first: the two own names and the Backlog Handoff column-header literal.
+refs=0
+while IFS= read -r f; do
+  case "$f" in VENDORED.md|scripts/check-upstream.sh|docs/superpowers/*) continue ;; esac
+  [[ -f "$f" ]] || continue
+  found=$(sed -e 's/sdd-pm-toolkit//g' -e 's/sdd-pm-skills//g' -e "s|${READY_LIT}||g" "$f" | grep -nE "$UPSTREAM_RE")
+  if [[ -n "$found" ]]; then
+    echo "$found" | sed "s|^|$f:|"
+    refs=1
+  fi
+done < <(git ls-files)
+[[ $refs -eq 0 ]] || err "tracked files reference the upstream repo/plugin or a command of it (lines above)"
+# no "required skills" / install-the-other-plugin text in any skill
+if grep -rniE 'required skills|install sdd' skills/; then
+  err "a skill still mentions required skills or installing another plugin (lines above)"
+fi
+ok "no upstream references repo-wide, no required-skills text in skills"
+
+# --- 26. standalone packaging: upstream-check script, compatibility docs, single plugin-dir ---
+[[ -f scripts/check-upstream.sh ]] || err "scripts/check-upstream.sh missing"
+[[ -e "scripts/check-${_s}-contract.sh" ]] && err "the old drift script still exists; it must be renamed to check-upstream.sh"
+if [[ -f scripts/check-upstream.sh ]]; then
+  bash -n scripts/check-upstream.sh || err "scripts/check-upstream.sh has a syntax error"
+  bash scripts/check-upstream.sh >/dev/null 2>&1
+  [[ $? -eq 2 ]] || err "scripts/check-upstream.sh without arguments must exit 2"
+  grep -qF 'VENDORED.md' scripts/check-upstream.sh || err "scripts/check-upstream.sh must read the pinned commit from VENDORED.md"
+fi
+for s in pm-help pm-discover; do
+  grep -qiF 'install block' "skills/$s/SKILL.md" && err "skills/$s/SKILL.md must not mention an install block"
+done
+if [[ -f README.md ]]; then
+  grep -qxF '## Compatibility with SDD development workflows' README.md \
+    || err "README.md missing heading: ## Compatibility with SDD development workflows"
+  grep -qF 'VENDORED.md' README.md || err "README.md must point at VENDORED.md"
+  grep -qF 'check-upstream.sh' README.md || err "README.md must mention scripts/check-upstream.sh"
+  grep -qE '^## Relationship to' README.md && err "README.md must not have a 'Relationship to ...' section"
+fi
+if [[ -f docs/smoke-test.md ]]; then
+  grep -E -- '--plugin-dir.*--plugin-dir' docs/smoke-test.md && err "docs/smoke-test.md must use a single --plugin-dir"
+fi
+ok "upstream-check script, compatibility docs and single plugin-dir checked"
 
 echo
 if [[ $fail -eq 0 ]]; then

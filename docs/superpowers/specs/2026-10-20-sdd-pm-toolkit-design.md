@@ -4,21 +4,22 @@ Date: 2026-10-20 · Author: Norbert Suski · Status: draft
 
 ## Purpose
 
-A Claude Code plugin (`sdd-pm-skills`) with skills for a **product manager**, built as a
-companion to the `sdd-skills` plugin (repo `sdd-toolkit`, v0.4.1). The PM toolkit covers the
-product work around the SDD pipeline — research, discovery orchestration, PRD review, metrics,
-prioritization, backlog sync, forecasting and stakeholder status — and **reuses** `sdd-skills`
-for shaping, PRD and roadmap instead of copying them.
+A Claude Code plugin (`sdd-pm-skills`) with skills for a **product manager**. It covers the whole
+product flow — project setup, research, discovery orchestration, framing, shaping, the PRD, PRD
+review, metrics, the roadmap and its map, prioritization, backlog sync, forecasting and
+stakeholder status — and produces the file formats developers' SDD tooling reads. As amended
+(see Amendments), the six core SDD skills are vendored as `pm-*` skills, so the plugin has no
+runtime dependency on any other plugin.
 
 ## Decisions (from the 2026-10-20 session)
 
 | # | Decision |
 |---|---|
 | D1 | Product manager first. Project-manager skills (RAID, stakeholders, launch, retro) are v0.2+. |
-| D2 | Depend on `sdd-skills` at runtime. PM skills invoke `/sdd-init`, `/sdd-frame`, `/sdd-shape`, `/sdd-prd`, `/sdd-roadmap` via the Skill tool. Nothing is copied. |
+| D2 | Core SDD skills vendored as `pm-*`; no runtime dependency. (Originally: depend on `sdd-skills` at runtime and invoke its skills via the Skill tool, nothing copied.) `pm-init`, `pm-frame`, `pm-shape`, `pm-prd`, `pm-roadmap` and `pm-map` are adapted copies recorded in `VENDORED.md`; the formats they write are unchanged. |
 | D3 | Integrations: Jira, Confluence, Linear, Notion, Slack, email, plus git `context/` files. Markdown in `context/` is the source of truth; external tools are projections. |
 | D4 | Time estimates (dates) live only in `forecast.md`, written by `pm-forecast`. `roadmap.md` stays estimate-free. `prioritization.md` may hold PM-supplied effort inputs (person-weeks), used only for scoring, never as a delivery estimate. |
-| D5 | The `sdd-toolkit` repository is not modified. Every integration point uses contracts `sdd-skills` 0.4.1 already exposes. |
+| D5 | The upstream skills repository is never modified. Compatibility is by file format only: every format the PM skills read or write is pinned in `artifact-contract.md`, and `VENDORED.md` records the source commit of every vendored file. |
 
 ## Non-goals (v0.1)
 
@@ -33,12 +34,14 @@ for shaping, PRD and roadmap instead of copying them.
 
 | Artifact (under `$CONTEXT_ROOT/`) | Sole writer | PM toolkit access |
 |---|---|---|
-| `.sdd.yml`, `README.md` | `/sdd-init` | read |
-| `.sdd.local.yml` (`audience:`) | any audience-aware skill | read; write `audience:` only, same protocol as sdd plain-mode |
-| `foundation/<slug>/shape-notes.md` | `/sdd-shape` | read |
-| `foundation/<slug>/prd.md` | `/sdd-prd` (+ review skills flip `status`) | read; `pm-prd-review` edits with per-finding approval, may set `status: reviewed` |
-| `foundation/<slug>/roadmap.md` | `/sdd-roadmap`, `/sdd-archive` (Done) | read only |
-| `changes/**`, `archive/**` | sdd change skills | read only |
+| `.sdd.yml`, `README.md` | `pm-init` | write (`pm-init`); read elsewhere |
+| `.sdd.local.yml` (`audience:`) | `pm-init` and any audience-aware skill | read; write `audience:` only, same protocol as the plain-language reference |
+| `foundation/<slug>/shape-notes.md` | `pm-shape` | write (`pm-shape`); read elsewhere |
+| `foundation/<slug>/prd.md` | `pm-prd` (+ review skills flip `status`) | write (`pm-prd`); `pm-prd-review` edits with per-finding approval, may set `status: reviewed` |
+| `foundation/<slug>/roadmap.md` | `pm-roadmap`; a developer's archive step (Done) | write (`pm-roadmap`); read elsewhere |
+| `foundation/<slug>/roadmap-map.md` | `pm-map` | write |
+| `foundation/<slug>/frame-<date>-<topic>.md` | `pm-frame` | write |
+| `changes/**`, `archive/**` | a developer's workflow | read only |
 | `foundation/<slug>/research/*.md` | `pm-research-synthesis` | write |
 | `foundation/<slug>/prd-review-<date>.md` | `pm-prd-review` | write |
 | `foundation/<slug>/metrics.md` | `pm-metrics` | write |
@@ -49,20 +52,20 @@ for shaping, PRD and roadmap instead of copying them.
 | `foundation/<slug>/pm-config.yml` | any PM skill, after user confirms | write |
 | `foundation/<slug>/exports/*` | PM skills (fallback when no MCP) | write |
 
-## Runtime dependency on sdd-skills
+## Compatibility with SDD development workflows
 
-- Every PM skill that invokes an sdd skill first checks that the skill is listed among the
-  host's available skills (`sdd-shape`, `sdd-prd`, `sdd-roadmap`, `sdd-init`, `sdd-frame`).
-  Missing → STOP with the install block from `pm-help/references/sdd-contract.md`.
-- PM skills never link files across plugins (`../sdd-*/…`). Shared knowledge they need from
-  sdd-skills (section names, frontmatter keys, folder layout, root discovery) is restated as a
-  pinned **consumer contract** in `skills/pm-help/references/sdd-contract.md`, tagged
-  `sdd_skills_version: 0.4.1`.
+- The plugin needs no other plugin at runtime. Developers' SDD tooling and the PM skills meet
+  only at file formats: `prd.md`, `roadmap.md`, `shape-notes.md`, the `context/` root, and the
+  read-only `changes/**` and `archive/**` folders.
+- Those formats are restated as data in `skills/pm-help/references/artifact-contract.md`
+  (marker blocks plus the contract check procedure). No file links cross plugins.
 - Every skill that parses `prd.md` or `roadmap.md` runs a **contract check** first: required
-  `##` headings present per the contract. Mismatch → report the missing headings and STOP
-  (never guess-parse).
-- `scripts/check-sdd-contract.sh <path-to-sdd-toolkit>` (manual, read-only) greps a local
-  sdd-toolkit checkout for every contract string and reports drift.
+  `##` headings present per the contract. Mismatch → report the missing headings
+  (`CONTRACT MISMATCH: <file> missing <headings>`) and STOP (never guess-parse).
+- `VENDORED.md` records every vendored file: its source file, the source commit and the
+  adaptations. `scripts/check-upstream.sh <path-to-source-checkout>` (manual, read-only, never
+  in CI) greps a local checkout of the source for every contract string and lists the vendored
+  source files that changed since the recorded commit.
 
 ## Audience
 
@@ -99,7 +102,13 @@ identical in both modes.
 
 | Skill | Input | Output | Notes |
 |---|---|---|---|
-| `pm-help` | optional skill/project arg | chat only | Read-only map + "you are here" across PM and SDD artifacts |
+| `pm-help` | optional skill/project arg | chat only | Read-only map + "you are here" across the project's artifacts |
+| `pm-init` | optional target folder | the `context/` root (`README.md`, `.sdd.yml`, `.sdd.local.yml`) | Vendored; idempotent |
+| `pm-frame` | an observation plus a proposed cause or solution | `frame-<date>-<topic>.md` | Vendored; never touches `changes/**` |
+| `pm-shape` | an idea or research file | `shape-notes.md` | Vendored; resumable; plain by default |
+| `pm-prd` | `shape-notes.md` or raw notes | `prd.md` | Vendored; schema-conformant, gaps in Open Questions |
+| `pm-roadmap` | `prd.md` | `roadmap.md` | Vendored; vertical slices, no estimates |
+| `pm-map` | `roadmap.md` | `roadmap-map.md` | Vendored; deterministic Mermaid graph |
 | `pm-research-synthesis` | transcripts, notes, survey exports | `research/<date>-<topic>.md` | Every insight cites verbatim quotes with source ids; PII pseudonymized |
 | `pm-discover` | idea or research file | routes only | init → (frame) → shape → prd → prd-review → roadmap; human gate between steps |
 | `pm-prd-review` | `prd.md` | `prd-review-<date>.md`, approved edits to `prd.md` | 7 dimensions, APPROVED / NEEDS_ATTENTION / REJECTED, triage loop |
@@ -122,12 +131,13 @@ identical in both modes.
 
 - R11: sdd verdicts are spelled `APPROVED | NEEDS ATTENTION | REJECTED | SKIPPED (...)` (space); only `pm-prd-review`'s own artifact uses `NEEDS_ATTENTION`.
 - R13: `pm-status` needs-triage follows sdd's classification: negative = REJECTED or NEEDS ATTENTION with pending decisions; positive = APPROVED, SKIPPED, triaged NEEDS ATTENTION.
-- R16: `pm-discover` adds the sdd stack gate before the roadmap (`foundation/tech-stack.md` or `foundation/stack-assessment.md`); the human may hand off or skip.
+- R16: `pm-discover` adds the technology-choice gate before the roadmap (`foundation/tech-stack.md` or `foundation/stack-assessment.md` present; a developer's step); the human may hand off or skip.
 - R17: `prd.md` presence wins over shape state in `pm-discover` stage derivation; a draft unreviewed PRD is routed to `/pm-prd-review` even when a roadmap exists.
 - R21: `pm-discover` counts the PRD as reviewed only by `status: reviewed|locked` or a latest review with `verdict: APPROVED`; a NEEDS_ATTENTION or REJECTED latest review keeps the stage `specified`.
-- R23: `pm-prioritize` hand-off is a `/sdd-roadmap` re-run (list as input to its anchor questions, with a warning that regeneration rebuilds statuses) or a human hand-edit of `roadmap.md`; no per-slice overrides are promised.
+- R23: `pm-prioritize` hand-off is a `/pm-roadmap` re-run (list as input to its anchor questions, with a warning that regeneration rebuilds statuses) or a human hand-edit of `roadmap.md`; no per-slice overrides are promised.
 - R24: `pm-forecast` throughput pools every archived change under the context root (team pace), and `forecast.md` caveats say so.
 - R25: `tracker-map.md` gains a `Synced hash` column (sha256 of the rendered description, 12 hex) so changed descriptions can be detected.
 - R26: export files are named `exports/<YYYY-MM-DD>-<what>.<ext>` per `integrations.md` (for example `exports/<date>-backlog.csv`).
 - R29: `forecast.md` frontmatter carries a machine-readable `deadline_risk` that `pm-status` reads; the script is unchanged.
 - `pm-config.yml` gains `status_page` (pm-status stores the Confluence/Notion page id).
+- Standalone (v0.1, before release): core SDD skills vendored as `pm-*` (`pm-init`, `pm-frame`, `pm-shape`, `pm-prd`, `pm-roadmap`, `pm-map`); no runtime dependency. D2 and the ownership table are amended accordingly, "Runtime dependency on sdd-skills" became "Compatibility with SDD development workflows", the contract file is `artifact-contract.md`, and the drift script is `scripts/check-upstream.sh`. The shared references `prd-schema.md` and `plain-language.md` carry the vendored schema and audience rules.

@@ -4,7 +4,7 @@ description: >
   Rank what is left to build with a scoring method the person picks: RICE (recommended), ICE or MoSCoW. Scores every
   roadmap item that is not done (without a roadmap: the PRD's requirements) from inputs the person supplies, never
   guessed; computes each score with python3, not in the head; reports dependency conflicts ("S-06 needs S-04 first"
-  when an item outranks its own prerequisite); proposes a sequence the person can use when re-running /sdd-roadmap
+  when an item outranks its own prerequisite); proposes a sequence the person can use when re-running /pm-roadmap
   or hand-editing the roadmap; writes foundation/<slug>/prioritization.md. Never edits roadmap.md. Use after the roadmap exists, or any
   time the order is being argued about. Trigger phrases: "prioritize the roadmap", "rank the backlog", "RICE score",
   "ICE score", "MoSCoW", "what should we build first", "what to cut", "prioritise these features", "score these items",
@@ -25,12 +25,12 @@ or computed from numbers the person gave, and the roadmap itself is never touche
 someone proposed. Also when there is no roadmap yet but a `prd.md` has requirements to rank (a lighter result: no dependency check).
 
 **Skip when** there is no PRD (`/pm-discover`), the question is "when will it be done?" (`/pm-forecast`), the question is whether
-the plan is right rather than the order (`/sdd-roadmap`), or fewer than two items are unfinished (nothing to rank).
+the plan is right rather than the order (`/pm-roadmap`), or fewer than two items are unfinished (nothing to rank).
 
 ## Relationship to other skills
 
-- `/sdd-roadmap` — owns `roadmap.md`. This skill reads it and never edits it. A proposed order becomes real only when the person
-  acts on it: as input to a `/sdd-roadmap` re-run (its interview has three anchor questions, no per-item order override, and a re-run
+- `/pm-roadmap` — owns `roadmap.md`. This skill reads it and never edits it. A proposed order becomes real only when the person
+  acts on it: as input to a `/pm-roadmap` re-run (its interview has three anchor questions, no per-item order override, and a re-run
   regenerates the file) or as a hand-edit of the roadmap order (Step 10).
 - `/pm-metrics` — if `metrics.md` exists its baselines may help the person estimate reach; nothing is copied from it.
 - `/pm-forecast` — turns throughput history into date ranges. The effort number asked here is a ranking input, not a schedule.
@@ -38,7 +38,7 @@ the plan is right rather than the order (`/sdd-roadmap`), or fewer than two item
 - `/pm-help` — the map of the PM flow.
 
 Shared rules, linked rather than restated: finding the root and the project — `../pm-help/references/context-resolution.md`; the
-contract check and the roadmap headings — `../pm-help/references/sdd-contract.md`; audience and plain language —
+contract check and the roadmap headings — `../pm-help/references/artifact-contract.md`; audience and plain language —
 `../pm-help/references/plain-language.md`; where `prioritization.md` sits among the PM artifacts —
 `../pm-help/references/pm-artifacts.md`; scales, formulas, the conflict rule and the file layout — `references/frameworks.md`;
 behavior fixtures — `references/eval-cases.md`.
@@ -57,7 +57,7 @@ don't know a number, we skip that item rather than invent one."
 
 ## Process
 
-Facilitation style (as the `sdd-*` skills do): recommended option first, marked "(Recommended)", always a "Not sure" option, one decision
+Facilitation style (as the other `pm-*` skills do): recommended option first, marked "(Recommended)", always a "Not sure" option, one decision
 at a time, echo back and confirm before anything is written, never invent content.
 
 ### Step 1 — Audience, root and project
@@ -74,12 +74,12 @@ at a time, echo back and confirm before anything is written, never invent conten
 ### Step 2 — Source and contract check (STOP on mismatch)
 
 - **`roadmap.md` exists** → it is the source (`basis: roadmap`). Run the `## Contract check procedure` in
-  `../pm-help/references/sdd-contract.md` with the `roadmap` heading list (`## Streams` optional) **before reading anything else
+  `../pm-help/references/artifact-contract.md` with the `roadmap` heading list (`## Streams` optional) **before reading anything else
   from it**: test every heading for an exact whole-line match. Any missing → print one line and STOP: no questions, no draft, no file,
   no fall back to the PRD.
 
   ```
-  CONTRACT MISMATCH: roadmap.md missing ## At a glance, ## Slices; sdd-skills expected 0.4.1
+  CONTRACT MISMATCH: roadmap.md missing ## At a glance, ## Slices
   ```
 
   (names comma-separated). Plain mode says it in words (the build plan is missing sections my steps rely on; please re-run the planning
@@ -88,7 +88,7 @@ at a time, echo back and confirm before anything is written, never invent conten
 
   ```
   There is no roadmap yet, so I can rank the PRD's requirements, but I can't check dependencies (a roadmap records them).
-  1. Rank the requirements now (Recommended)  2. Stop; build the roadmap first (/sdd-roadmap)  3. Not sure, explain
+  1. Rank the requirements now (Recommended)  2. Stop; build the roadmap first (/pm-roadmap)  3. Not sure, explain
   ```
 
   Option 2 → STOP. Option 1 → run the contract check on `prd.md` (`prd-greenfield` or `prd-brownfield` by `context_type`, as in the
@@ -235,7 +235,7 @@ for a in seq:
 ```
 
 (prints `ORDER S-04 S-06 S-05` and `CONFLICT S-06 needs S-04 first`). A `CYCLE` or `INVALID` exit → report it and STOP the pass; the roadmap's
-own prerequisites form a cycle, which is a `/sdd-roadmap` problem, not something to repair here. PRD runs pass `-` for every `PREREQS` and
+own prerequisites form a cycle, which is a `/pm-roadmap` problem, not something to repair here. PRD runs pass `-` for every `PREREQS` and
 skip the conflict table.
 
 From the output build the file's sections (formats in `references/frameworks.md`):
@@ -247,7 +247,7 @@ From the output build the file's sections (formats in `references/frameworks.md`
   scores 240.0 against 75.0." Items that only shift later because another moved ahead are not listed as moves. Add a note line for each
   moved item that is `blocked` (moving it earlier changes nothing until its decision is made) and for each item that shifts later and is
   already in progress (it pauses work that has begun), and for a not-done north-star slice moved later than it is
-  now ("this moves the north star later; `/sdd-roadmap` places it early on purpose"). Order identical → "None: the scores agree with the
+  now ("this moves the north star later; `/pm-roadmap` places it early on purpose"). Order identical → "None: the scores agree with the
   current order." A PRD run lists the proposed priority order of requirements instead, labelled as having no dependency check.
 - **`## Open Questions`** (format in `references/frameworks.md`): unscored items, missing prerequisite ids, outside conditions, source
   disagreements, pairs that could not be checked, and for a PRD run a `nice-to-have` requirement scored above a `must-have` one.
@@ -294,19 +294,19 @@ the path (technical mode) or say it is saved (plain mode).
 
 The proposed changes are a **list**; this skill cannot apply it. Say both routes and let the person choose:
 
-- **(a) Re-run `/sdd-roadmap`, using the list as input.** Its interview asks three anchor questions (main goal, north star, top blocker); it has
+- **(a) Re-run `/pm-roadmap`, using the list as input.** Its interview asks three anchor questions (main goal, north star, top blocker); it has
   no per-item order override, so the list informs those answers and the new order follows from them. **Warning, say it every time:** a re-run
   regenerates `roadmap.md` from scratch (archive-then-replace). Statuses are rebuilt and `## Done` starts empty in the new file; the archived
   copy keeps the old statuses and Done list.
-- **(b) Edit the order in `roadmap.md` by hand.** `sdd-skills` allows human hand-edits; the person keeps every item's Prerequisites consistent
+- **(b) Edit the order in `roadmap.md` by hand.** The roadmap format allows human hand-edits; the person keeps every item's Prerequisites consistent
   with the new order. The skill never makes this edit, even when asked.
 
 This skill does not prepare, write or start either route.
 
 Plain mode ends with the handoff block from `../pm-help/references/plain-language.md`: how many items were ranked, how many conflicts were
 found, that the order above is only a suggestion until the plan itself is changed, and the next step in product terms:
-"update the plan with these priorities" (re-run `/sdd-roadmap`, with the warning that the plan is rebuilt and finished-work statuses start afresh, or edit the order by hand), then "set up the tracker" (`/pm-backlog-sync`) or "see when it could be done" (`/pm-forecast`). Technical mode
-prints the file path, the counts (scored, unscored, conflicts, proposed changes) and the exact next command (`/sdd-roadmap`). A PRD run says the
+"update the plan with these priorities" (re-run `/pm-roadmap`, with the warning that the plan is rebuilt and finished-work statuses start afresh, or edit the order by hand), then "set up the tracker" (`/pm-backlog-sync`) or "see when it could be done" (`/pm-forecast`). Technical mode
+prints the file path, the counts (scored, unscored, conflicts, proposed changes) and the exact next command (`/pm-roadmap`). A PRD run says the
 next step is the roadmap, after the technology step. Confirm a skill is in the host's available list before naming it. Do not start the next
 skill.
 
@@ -320,7 +320,7 @@ One file: `$CONTEXT_ROOT/foundation/<slug>/prioritization.md`; frontmatter `proj
 
 Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
 
-1. **Never edits the roadmap.** "Apply this ranking to the roadmap" is declined; the answer is the proposed list and the two routes in Step 10 (a `/sdd-roadmap` re-run with its regeneration warning, or a hand-edit), both in the person's hands. No status, order or estimate is ever written to `roadmap.md`.
+1. **Never edits the roadmap.** "Apply this ranking to the roadmap" is declined; the answer is the proposed list and the two routes in Step 10 (a `/pm-roadmap` re-run with its regeneration warning, or a hand-edit), both in the person's hands. No status, order or estimate is ever written to `roadmap.md`.
 2. **Never invents an input.** Reach, impact, confidence, effort, ease and categories come from the person, from the allowed sets only; a missing one leaves the item unscored. No defaults, benchmarks or guesses, and no effort derived from `forecast.md` or history.
 3. **Scores are computed with `python3 -c`, never mentally,** from validated numbers passed as arguments. Text the person typed is never placed in a script or a shell command. An `INVALID:` exit shows its message and re-asks; no score is shown for it.
 4. **Done items are excluded.** `done` items are never scored, listed as candidates or counted as conflicts; `blocked` items are scored and flagged; in-progress items are scored and flagged.
@@ -329,7 +329,7 @@ Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
 7. **Contract first.** A missing `roadmap.md` heading (or PRD heading, in a PRD run) → one `CONTRACT MISMATCH` line and STOP, before any question. A broken roadmap is not silently replaced by the PRD.
 8. **No silent overwrite.** An existing `prioritization.md` triggers the diff and the Overwrite / Add run / Cancel question.
 9. **Own files only.** Writes `prioritization.md` and `audience:` in `.sdd.local.yml`. `changes/**`, `archive/**`, `roadmap.md`, `prd-vN.md` are never touched.
-10. **Never chain.** Do not start `/sdd-roadmap`, `/pm-forecast` or any other skill; the human decides.
+10. **Never chain.** Do not start `/pm-roadmap`, `/pm-forecast` or any other skill; the human decides.
 11. **Mirror the user's language.** Questions, flags and notes follow the user's language; ids, headings, method names and `Must / Should / Could / Won't` stay as written.
 
 ## Notes

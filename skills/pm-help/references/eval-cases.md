@@ -2,28 +2,31 @@
 
 Behavioral prompt fixtures for `pm-help`. The fixture project is `tests/fixtures/flat-root/context/`
 (project `recipe-fridge`). To try one by hand, copy it into a scratch git repo and run Claude Code with
-both plugins loaded (see the README, "Local testing"). Every case also implies HL-05.
+the plugin loaded (see the README, "Local testing"). Every case also implies HL-05.
 
 Format: **Setup** (what exists), **Prompt**, **Expected**, **Fail if**.
 
 ## HL-01 — No argument shows the flow map, writes nothing
 
-- **Setup:** any repo; `sdd-skills` and `sdd-pm-skills` both installed. A context root may or may not exist.
+- **Setup:** any repo; `sdd-pm-skills` installed. A context root may or may not exist.
 - **Prompt:** `/pm-help`
-- **Expected:** Branch A. The nine-step flow (research, discover, PRD review, metrics, roadmap, prioritize,
-  backlog sync, forecast, status), each step naming its skill and the plugin that owns it (`sdd-roadmap`
-  and the discover sub-steps are `sdd-skills`, the rest `sdd-pm-skills`). Optional steps are marked.
+- **Expected:** Branch A. The flow (project setup, research, discover with its frame/shape/PRD parts, PRD review,
+  metrics, roadmap, prioritize, backlog sync, forecast, status), each step naming the `pm-*` skill that owns it,
+  with the build side described as the developers' own step. Optional steps are marked.
   Ends with a single "Start here" action (`/pm-discover …`) and a pointer to `/pm-help <project>`.
   No project files are read, nothing is written.
 - **Fail if:** it lists project state, runs or starts any skill, creates a file, or recommends more than one first action.
 
-## HL-02 — sdd-skills absent: install block, Branch C refused
+## HL-02 — Never asks to install another plugin
 
-- **Setup:** only `sdd-pm-skills` installed; none of `sdd-init`, `sdd-frame`, `sdd-shape`, `sdd-prd`, `sdd-roadmap` is available.
-- **Prompt (a):** `/pm-help` — **Expected:** the Install block from `references/sdd-contract.md` (both `/plugin` lines),
-  naming the missing skills, then the flow map with a note that sdd-owned steps cannot start until it is installed.
-- **Prompt (b):** `/pm-help recipe-fridge` — **Expected:** the Install block and a stop; no "you are here" report, no next move.
-- **Fail if:** (b) reports project state or a next command; the Install block is omitted or paraphrased.
+- **Setup:** only `sdd-pm-skills` installed (no other plugin of any kind); no context root, or the fixture root.
+- **Prompt (a):** `/pm-help` — **Expected:** the flow map, with `/pm-init`, `/pm-frame`, `/pm-shape`, `/pm-prd`,
+  `/pm-roadmap` and `/pm-map` named as steps of this plugin. No install block, no dependency check, no
+  mention of any other plugin.
+- **Prompt (b):** `/pm-help recipe-fridge` — **Expected:** the full "you are here" report and one next move,
+  exactly as in HL-04; nothing is refused for lack of another plugin.
+- **Fail if:** either answer tells the user to install, add or enable any plugin or marketplace, prints an install
+  block, refuses Branch C, or says a `pm-init`/`pm-frame`/`pm-shape`/`pm-prd`/`pm-roadmap`/`pm-map` step "cannot start".
 
 ## HL-03 — Two roots: pick shown, nearest preselected
 
@@ -42,13 +45,13 @@ Format: **Setup** (what exists), **Prompt**, **Expected**, **Fail if**.
 
 - **Setup:** the fixture (`recipe-fridge`: `prd.md` with `status: draft`, `roadmap.md` with 7 items, four archived
   changes, `changes/meal-plan/` with `status: implementing`). No `shape-notes.md`, `metrics.md`, `forecast.md`,
-  `prioritization.md`, `tracker-map.md`, `pm-config.yml`, `status/` or `prd-review-*.md`. Both plugins installed.
+  `prioritization.md`, `tracker-map.md`, `pm-config.yml`, `status/` or `prd-review-*.md`.
 - **Prompt:** `/pm-help recipe-fridge`
 - **Expected:** Branch C. Root `context` (flat) resolved without ambiguity. Report shows PRD present (draft, created
   2026-09-15), roadmap present (4 of 7 done, updated 2026-10-14), 4 archived changes, `meal-plan` in flight, and
   metrics, forecast and status reports as `absent` (also prioritization, backlog sync, PRD review). One next move:
   `/pm-prd-review` with a one-line reason (the PRD is still a draft and has never been reviewed). If `pm-prd-review`
-  is not installed in the host, it says so plainly instead of implying it will run.
+  is not available in the host, it says so plainly instead of implying it will run.
 - **Fail if:** next move is anything other than `/pm-prd-review`, more than one next move is given, an absent artifact is
   reported as present, or the report shows frontmatter/FR jargon to a plain-audience user.
 

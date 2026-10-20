@@ -30,8 +30,8 @@ method forecasts all the items left together, not one of them).
 
 ## Relationship to other skills
 
-- `/sdd-roadmap` — owns `roadmap.md`; this skill reads the `## At a glance` table and never edits the file.
-- `/sdd-archive` — stamps `archived_at` on a finished change; that date is this skill's only source of history. Changes archived
+- `/pm-roadmap` — owns `roadmap.md`; this skill reads the `## At a glance` table and never edits the file.
+- A developer's archive step — stamps `archived_at` on a finished change; that date is this skill's only source of history. Changes archived
   without a date are not counted (reported as skipped).
 - `/pm-prioritize` — what to cut or reorder when the forecast says a deadline is at risk. Its effort numbers are scoring inputs and
   are not used here.
@@ -39,7 +39,7 @@ method forecasts all the items left together, not one of them).
 - `/pm-help` — the map of the PM flow.
 
 Shared rules, linked rather than restated: finding the root and the project — `../pm-help/references/context-resolution.md`; the
-contract check and the roadmap headings — `../pm-help/references/sdd-contract.md`; audience and plain language —
+contract check and the roadmap headings — `../pm-help/references/artifact-contract.md`; audience and plain language —
 `../pm-help/references/plain-language.md`; where `forecast.md` sits among the PM artifacts — `../pm-help/references/pm-artifacts.md`;
 the file layout, caveats and Deadline Check wording — `references/forecast-format.md`; behavior fixtures —
 `references/eval-cases.md`; the script and its tests — `scripts/forecast.py`, `tests/test_forecast.py` in the repository.
@@ -49,7 +49,7 @@ the file layout, caveats and Deadline Check wording — `references/forecast-for
 1. **A project name** → use it.
 2. **Nothing given** → resolve the project (Step 1).
 3. **A request to put dates into the roadmap** ("add these dates to roadmap.md", "write the forecast next to each slice") → decline in
-   one sentence: the roadmap belongs to `/sdd-roadmap`, stays estimate-free, and dates live only in `forecast.md`; offer to
+   one sentence: the roadmap belongs to `/pm-roadmap`, stays estimate-free, and dates live only in `forecast.md`; offer to
    continue with the forecast.
 4. **A request for the date of one item** → say the method gives one range for everything left, not a date per item, and offer that.
 
@@ -70,12 +70,12 @@ left on the build plan, and work out a range of dates. I won't ask you for any e
 
 ### Step 2 — Contract check (STOP on mismatch)
 
-Run the `## Contract check procedure` in `../pm-help/references/sdd-contract.md` with the `roadmap` heading list **before reading
+Run the `## Contract check procedure` in `../pm-help/references/artifact-contract.md` with the `roadmap` heading list **before reading
 anything else from `roadmap.md`**: test every heading for an exact whole-line match. Any missing → print one line and STOP: no
 script run, no question, no file.
 
 ```
-CONTRACT MISMATCH: roadmap.md missing ## At a glance; sdd-skills expected 0.4.1
+CONTRACT MISMATCH: roadmap.md missing ## At a glance
 ```
 
 (names comma-separated). Plain mode says it in words (the build plan is missing sections my steps rely on; please re-run the planning
@@ -102,8 +102,7 @@ python3 "<skill dir>/scripts/forecast.py" --context-root "$CONTEXT_ROOT" --proje
 Defaults are 2000 runs and seed 42; do not change them unless the person asks (a re-run of an existing `forecast.md` reuses its `runs` and
 `seed`, Step 7). The script only reads files, uses nothing but the Python standard library (3.9+), and prints one JSON object. Exit
 code 2 with an `error:` line means the roadmap could not be read: if the message says the table needs `Change ID` and `Status`
-columns, treat it as a contract mismatch (print `CONTRACT MISMATCH: roadmap.md At a glance table missing <columns>; sdd-skills
-expected 0.4.1` and STOP); otherwise show the message and STOP. `python3` missing → say so and STOP.
+columns, treat it as a contract mismatch (print `CONTRACT MISMATCH: roadmap.md At a glance table missing <columns>` and STOP); otherwise show the message and STOP. `python3` missing → say so and STOP.
 
 JSON keys you rely on: `status` (`ok` | `insufficient-history`), `reason`, `remaining`, `remaining_ids`, `completions`, `skipped`,
 `throughput`, `throughput_from`, `throughput_to`, `weeks` and `dates` (each `p50`, `p85`, `p95`; null when insufficient),
@@ -114,7 +113,7 @@ comes from this JSON; never adjust, round to a friendlier date or add a "buffer"
 
 **`status: insufficient-history`** → no dates, not even a hint ("probably around …" is also a date). Say what is missing in words,
 from `reason`: the forecast needs at least 3 finished changes archived with a date, spread over at least 3 complete calendar weeks,
-with something finished in them; say how many there are now (`completions`) and that `/sdd-archive` stamps the date. If `skipped` >
+with something finished in them; say how many there are now (`completions`) and that a developer's archive step stamps the date. If `skipped` >
 0, say that many archive entries had no usable date and were not counted. Offer to save a `forecast.md` that records this (Step 6) or to
 stop.
 
@@ -206,7 +205,7 @@ Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
 ## Notes
 
 - **Where the history comes from.** Every `archive/*/change.md` in the context root with a usable `archived_at` counts as one finished
-  change in the week it was archived (sdd writes an ISO datetime such as `2026-09-29T15:10:00Z`; only the date part is read). Weeks run
+  change in the week it was archived (the archive step writes an ISO datetime such as `2026-09-29T15:10:00Z`; only the date part is read). Weeks run
   Monday to Sunday; the current week is not counted; at most the last 12 complete weeks are used; weeks with nothing finished count as
   zero. The archive is not filtered by project, so with several projects in one context root the pace is the pooled pace.
 - **How it is simulated.** For each of 2000 runs, a random past week's count is added week after week until the remaining items are

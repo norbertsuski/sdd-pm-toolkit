@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monte Carlo throughput forecast for an SDD project (stdlib only, Python 3.9+).
+"""Monte Carlo throughput forecast for a project in a context root (stdlib only, Python 3.9+).
 
 Reads finished changes from ``<context-root>/archive/*/change.md`` and the unfinished
 items of ``<context-root>/foundation/<project>/roadmap.md``, simulates weekly
@@ -85,7 +85,7 @@ def read_hard_deadline(prd: Path) -> date | None:
 
 
 def _parse_iso_date(value: str | None) -> date | None:
-    """First 10 characters as YYYY-MM-DD (sdd writes ISO datetimes); None if absent or invalid."""
+    """First 10 characters as YYYY-MM-DD (the archive step writes ISO datetimes); None if absent or invalid."""
     if not value:
         return None
     head = value.strip()[:10]

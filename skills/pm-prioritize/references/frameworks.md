@@ -73,7 +73,7 @@ outside condition: it is listed in `## Open Questions`, never checked as a confl
 The proposed order is the highest-scoring order that still puts every unfinished prerequisite first: repeatedly place, among the
 items whose unfinished prerequisites are all placed, the highest-scoring one (ties keep the current roadmap order; unscored items
 come last in roadmap order). A dependency always beats a score. `## Proposed Sequence Changes` lists where this order differs
-from the roadmap's current order among the scored items; it is a list for the person to use as input to a `/sdd-roadmap` re-run or to hand-edit the roadmap order, never an edit by this skill.
+from the roadmap's current order among the scored items; it is a list for the person to use as input to a `/pm-roadmap` re-run or to hand-edit the roadmap order, never an edit by this skill.
 
 ## prioritization.md layout
 
@@ -142,7 +142,7 @@ line states how to use it. No changes → `None: the scores agree with the curre
 2. Note: S-06 is blocked, so moving it earlier changes nothing until its decision is made.
 3. Note: S-05 is already in progress and shifts later; that means pausing work that has begun.
 
-To apply: use this list as input to the three anchor questions of a `/sdd-roadmap` re-run (it has no per-item order override, and it regenerates `roadmap.md` from scratch: statuses are rebuilt and `## Done` starts empty; the archived copy keeps the old one), or edit the order in `roadmap.md` by hand. This file does not edit `roadmap.md`.
+To apply: use this list as input to the three anchor questions of a `/pm-roadmap` re-run (it has no per-item order override, and it regenerates `roadmap.md` from scratch: statuses are rebuilt and `## Done` starts empty; the archived copy keeps the old one), or edit the order in `roadmap.md` by hand. This file does not edit `roadmap.md`.
 ```
 
 A PRD run lists the proposed priority order of the requirements instead (`1. FR-004 ...`) and says the order has no dependency

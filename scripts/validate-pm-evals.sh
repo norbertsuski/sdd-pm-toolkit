@@ -123,7 +123,7 @@ rag() {
 }
 
 # item_state <roadmap_status> <archived> <change_dir> <block_unknown>  (flags yes|no)
-# Reporting view of one roadmap item (the authoritative state machine stays /sdd-project-run --status):
+# Reporting view of one roadmap item (the developers' own state tracking stays the authoritative state machine):
 # done > in-progress > blocked > the roadmap's own Status.
 item_state() {
   local roadmap_status="$1" archived="$2" change_dir="$3" block_unknown="$4"

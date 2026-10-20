@@ -105,7 +105,7 @@ Covers gaps, single-source insights, missing parts of a job, and groups of peopl
 
 ## Seed for shaping
 
-Written in the participants' words. `pm-discover` hands this section unchanged to `/sdd-shape` as the starting
+Written in the participants' words. `pm-discover` hands this section unchanged to `/pm-shape` as the starting
 idea, so it must stand alone and must not add anything the sources do not say.
 
 ```markdown

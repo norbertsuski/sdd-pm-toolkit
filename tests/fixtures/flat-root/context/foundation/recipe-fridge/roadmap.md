@@ -159,7 +159,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02       | recipe-match     | Rank recipes by fridge match                                  | no                    | Done — archived 2026-10-08             |
 | S-03       | save-favorites   | Save recipes to favourites                                    | no                    | Done — archived 2026-10-14             |
 | S-04       | shopping-list    | Generate a shopping list for a recipe                         | no                    | Waiting on the unit convention         |
-| S-05       | meal-plan        | Plan the week's meals                                         | yes                   | Run `/sdd-plan meal-plan`              |
+| S-05       | meal-plan        | Plan the week's meals                                         | yes                   | Ready for a developer to plan          |
 | S-06       | share-recipe     | Share a recipe with a household member                        | no                    | Blocked on the sharing decision        |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Include one row for every `F-NN` and `S-NN`. It should be compact enough to copy into issues, but it must not duplicate the detailed roadmap body.
