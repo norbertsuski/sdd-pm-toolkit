@@ -220,10 +220,28 @@ ok "fixture prd, roadmap, archive and changes checked against the contract"
 # --- 13. ownership line in every skill (R5) -----------------------------
 OWN_ALL='Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.'
 OWN_REVIEW='Never writes `shape-notes.md` or `roadmap.md`.'
+# The six vendored writers (S2) carry "Writes only: <files>." naming what they write instead of OWN_ALL.
+# vendored_own <skill>: a substring the skill's "Writes only:" line must contain; empty = not a vendored writer.
+vendored_own() {
+  case "$1" in
+    pm-init)    echo '.sdd.yml' ;;
+    pm-frame)   echo 'frame-' ;;
+    pm-shape)   echo 'shape-notes.md' ;;
+    pm-prd)     echo 'prd.md' ;;
+    pm-roadmap) echo 'roadmap.md' ;;
+    pm-map)     echo 'roadmap-map.md' ;;
+    *)          echo '' ;;
+  esac
+}
 for dir in skills/pm-*/; do
   name=$(basename "$dir")
   [[ -f "$dir/SKILL.md" ]] || continue
-  if [[ "$name" == "pm-prd-review" ]]; then
+  want=$(vendored_own "$name")
+  if [[ -n "$want" ]]; then
+    line=$(grep -m1 '^Writes only: ' "$dir/SKILL.md" || true)
+    [[ -n "$line" ]] || { err "$name/SKILL.md missing ownership line 'Writes only: <files>.'"; continue; }
+    [[ "$line" == *"$want"* ]] || err "$name/SKILL.md 'Writes only:' line must name $want"
+  elif [[ "$name" == "pm-prd-review" ]]; then
     grep -qF -- "$OWN_REVIEW" "$dir/SKILL.md" || err "$name/SKILL.md missing ownership line: $OWN_REVIEW"
   else
     grep -qF -- "$OWN_ALL" "$dir/SKILL.md" || err "$name/SKILL.md missing ownership line: $OWN_ALL"
@@ -577,6 +595,69 @@ if [[ -f skills/pm-help/SKILL.md ]] && grep -qF 'Planned for this release' skill
   err "pm-help/SKILL.md must not list any skill as planned: v0.1 is complete with pm-status"
 fi
 ok "pm-status files, format headings, mandate strings, eval ids, status_page key and artifact row checked"
+
+# --- 23. vendored pm-init / pm-shape / pm-prd + shared prd-schema, plain-language, VENDORED.md
+VEND="pm-init pm-shape pm-prd"
+for s in $VEND; do
+  d=skills/$s
+  [[ -f "$d/SKILL.md" ]] || { err "missing $d/SKILL.md"; continue; }
+  head -5 "$d/SKILL.md" | grep -q "^name: $s$" || err "$s/SKILL.md frontmatter name must be $s"
+  grep -q "^description:" "$d/SKILL.md" || err "$s/SKILL.md has no description"
+  [[ -f "$d/references/eval-cases.md" ]] || err "missing $d/references/eval-cases.md"
+done
+# no reference to the upstream repo/plugin or its commands in the vendored files or the shared refs they use
+for f in skills/pm-init skills/pm-shape skills/pm-prd; do
+  if [[ -d "$f" ]] && grep -rnE 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-' "$f"; then
+    err "$f contains a reference to the upstream repo/plugin or a /sdd- command"
+  fi
+done
+for f in prd-schema plain-language context-resolution; do
+  if [[ -f "$HELP_REFS/$f.md" ]] && grep -nE 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-' "$HELP_REFS/$f.md"; then
+    err "$HELP_REFS/$f.md contains a reference to the upstream repo/plugin or a /sdd- command"
+  fi
+done
+SCHEMA="$HELP_REFS/prd-schema.md"
+if [[ -f "$SCHEMA" && -f "$CONTRACT" ]]; then
+  for b in prd-greenfield prd-brownfield; do
+    while IFS= read -r h; do
+      grep -qxF -- "$h" "$SCHEMA" || err "prd-schema.md missing $b heading: $h"
+    done < <(contract_block "$b")
+  done
+else
+  err "prd-schema.md missing ($SCHEMA)"
+fi
+if [[ -f "$SCHEMA" ]]; then
+  grep -qF 'skills/' "$SCHEMA" && err "prd-schema.md must not cite skills/... paths (R9 citation form)"
+fi
+PL="$HELP_REFS/plain-language.md"
+for h in "## Auto-decision policy" "## Auto-decision audit trail" "## Handoff style" "## Artifacts are unchanged"; do
+  grep -qxF -- "$h" "$PL" 2>/dev/null || err "plain-language.md missing heading: $h"
+done
+if [[ -f VENDORED.md ]]; then
+  for f in skills/pm-init/SKILL.md skills/pm-shape/SKILL.md skills/pm-prd/SKILL.md \
+           skills/pm-help/references/prd-schema.md skills/pm-help/references/plain-language.md \
+           skills/pm-help/references/context-resolution.md; do
+    grep -qF -- "\`$f\`" VENDORED.md || err "VENDORED.md has no row for $f"
+  done
+  grep -qF '478b4d0' VENDORED.md || err "VENDORED.md must name the pinned commit 478b4d0"
+else
+  err "VENDORED.md missing"
+fi
+for pair in pm-init:IN pm-shape:SH pm-prd:PD; do
+  s=${pair%%:*}; px=${pair##*:}
+  ef=skills/$s/references/eval-cases.md
+  [[ -f "$ef" ]] || continue
+  n=$(grep -cE "^\| $px-[0-9]+ \|" "$ef")
+  [[ "$n" -ge 4 ]] || err "$s eval-cases.md needs at least 4 $px- rows (found $n)"
+done
+for pair in 'shape-notes.md:pm-shape' 'prd.md:pm-prd'; do
+  row=${pair%%:*}; owner=${pair##*:}
+  grep -F "| \`$row\`" "$HELP_REFS/pm-artifacts.md" | grep -qF "\`$owner\`" \
+    || err "pm-artifacts.md has no row for $row written by $owner"
+done
+grep -qF '/pm-shape' skills/pm-help/SKILL.md && grep -qF '/pm-prd' skills/pm-help/SKILL.md \
+  || err "pm-help/SKILL.md Branch A flow must name /pm-shape and /pm-prd"
+ok "vendored pm-init, pm-shape, pm-prd, prd-schema, plain-language headings, VENDORED.md and eval ids checked"
 
 echo
 if [[ $fail -eq 0 ]]; then

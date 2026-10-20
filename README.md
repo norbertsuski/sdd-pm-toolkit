@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (9 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (12 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -36,6 +36,9 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | Skill | Purpose |
 |---|---|
 | `pm-help` | Map of the PM flow and a "you are here" report for a project. Read-only. |
+| `pm-init` | Scaffolds the `context/` root: a flat-layout `README.md`, `.sdd.yml` (`layout: flat`), and the per-person, git-ignored `.sdd.local.yml` that remembers whether you want plain language or the technical view. Idempotent: re-running changes nothing that exists. Optional target folder (`/pm-init frontend/posting`). |
+| `pm-shape` | Facilitates the discovery conversation that turns an idea (new product or a change to an existing one) into `shape-notes.md`: one question at a time, never inventing content, resumable from a checkpoint, plain language by default. Detects whether the product is new or existing on its own, keeps stack and tooling choices out, and ends with a closing quality cross-check that warns but never blocks. |
+| `pm-prd` | Turns `shape-notes.md` (or pasted raw notes) into a schema-conformant `prd.md` (10 sections for a new product, 11 for a change to an existing one). Never invents content: every gap lands in Open Questions. Warns when the input is thin, saves as `prd-vN.md` instead of overwriting, and points to `/pm-prd-review` next. |
 | `pm-research-synthesis` | Turns interview transcripts, notes and survey exports into evidence-linked insights (verbatim quotes, pseudonymized) with a seed for shaping. |
 | `pm-discover` | The discovery router: derives the project's stage from files on disk and walks the PM, one human-gated step at a time, through `/sdd-init`, `/sdd-shape`, `/sdd-prd`, `/pm-prd-review`, the stack step and `/sdd-roadmap`. Writes nothing itself. |
 | `pm-prd-review` | Reviews the PRD on seven dimensions (PASS / CONCERNS / FAIL, quoted evidence), gives an APPROVED / NEEDS_ATTENTION / REJECTED verdict, saves a report, and triages findings one by one: approved fixes edit `prd.md` (diff shown first); may set `status: reviewed`, never `locked`. |
@@ -74,10 +77,10 @@ The PM skills never take over artifacts owned by `sdd-skills`. Each artifact und
 
 | Artifact (under `$CONTEXT_ROOT/`) | Sole writer | PM toolkit access |
 |---|---|---|
-| `.sdd.yml`, `README.md` | `/sdd-init` | read |
-| `.sdd.local.yml` (`audience:`) | any audience-aware skill | read; write `audience:` only, same protocol as sdd plain-mode |
-| `foundation/<slug>/shape-notes.md` | `/sdd-shape` | read |
-| `foundation/<slug>/prd.md` | `/sdd-prd` (+ review skills flip `status`) | read; `pm-prd-review` edits with per-finding approval, may set `status: reviewed` |
+| `.sdd.yml`, `README.md` | `pm-init` | write (`pm-init`); read elsewhere |
+| `.sdd.local.yml` (`audience:`) | `pm-init` and any audience-aware skill | read; write `audience:` only, same protocol as the plain-language reference |
+| `foundation/<slug>/shape-notes.md` | `pm-shape` | write (`pm-shape`); read elsewhere |
+| `foundation/<slug>/prd.md` | `pm-prd` (+ review skills flip `status`) | write (`pm-prd`); `pm-prd-review` edits with per-finding approval, may set `status: reviewed` |
 | `foundation/<slug>/roadmap.md` | `/sdd-roadmap`, `/sdd-archive` (Done) | read only |
 | `changes/**`, `archive/**` | sdd change skills | read only |
 | `foundation/<slug>/research/*.md` | `pm-research-synthesis` | write |

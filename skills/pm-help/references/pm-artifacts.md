@@ -4,12 +4,14 @@ Everything the PM skills write, under `$CONTEXT_ROOT/foundation/<slug>/`. Each r
 one skill; the owning skill's task fills in the **Frontmatter** and **Required headings** cells.
 Common frontmatter for every dated artifact: `project`, `created`, `updated`.
 
-`prd.md` is the one `sdd-*` file a PM skill may edit (`pm-prd-review`, per-finding approval, may set
-`status: reviewed`). `shape-notes.md`, `roadmap.md`, `changes/**` and `archive/**` are never written by
-any PM skill. See `sdd-contract.md` for the sdd-owned artifacts.
+`shape-notes.md` and `prd.md` are written by `pm-shape` and `pm-prd`; `pm-prd-review` may also edit
+`prd.md` (per-finding approval, may set `status: reviewed`). `roadmap.md`, `changes/**` and `archive/**`
+are never written by the skills listed below. See `sdd-contract.md` for the format of the shared artifacts.
 
 | Path | Written by | Frontmatter | Required headings |
 |---|---|---|---|
+| `shape-notes.md` | `pm-shape` | `project`, `context_type`, `delivery_mode`, `created`, `updated`, `checkpoint:` block (`current_phase`, `phases_completed`, `frs_drafted`, `quality_check_status`); never `audience` | the schema's per-phase sections (`## Vision & Problem Statement` … `## Non-Goals`), optional `## Quality cross-check`, `## Forward: …` and `## Auto-decisions (for review)` blocks (format: `prd-schema.md`) |
+| `prd.md` (a collision-safe save is `prd-v<N>.md`) | `pm-prd` | `project`, `version`, `status`, `created`, `context_type`, `product_type`, `target_scale`, `timeline_budget`; never `audience` | 10 greenfield or 11 brownfield `##` sections in schema order, `## Open Questions` carries every gap; `pm-prd-review` may edit it per approved finding (format: `prd-schema.md`) |
 | `research/<date>-<topic>.md` (matches `research/*.md`) | `pm-research-synthesis` | `project`, `topic`, `created`, `updated`, `sources` (count) | `## Sources`, `## Insights`, `## Jobs to Be Done`, `## Pains & Gains`, `## Contradictions & Surprises`, `## Open Questions`, `## Seed for shaping` (format: `skills/pm-research-synthesis/references/insights-format.md`) |
 | `prd-review-<date>.md` (a same-day second review is `prd-review-<date>-2.md`) | `pm-prd-review` | `project`, `prd_version`, `created`, `updated`, `verdict` (`APPROVED` \| `NEEDS_ATTENTION` \| `REJECTED`); marker `<!-- PRD-REVIEW-REPORT -->` | `## Verdicts`, `## Findings`, `## Triage log`; each finding is `### F<n> — <title>` with `Severity`, `Dimension`, `PRD ref`, `Evidence`, `Why it matters`, `Fix options`, `Decision` (format: `skills/pm-prd-review/SKILL.md` Step 7) |
 | `metrics.md` | `pm-metrics` | `project`, `prd_version`, `created`, `updated` | `## North Star Metric`, `## Input Metrics`, `## Success Criteria Mapping`, `## Guardrail Metrics`, `## Tracking Plan`, `## Open Questions`; mapping table `\| PRD criterion \| Metric \| Target \| Baseline \| Window \| Owner \|`, tracking table `\| Event \| Trigger \| Properties \| PRD ref \|`; unknown values are `TBD — Owner: <role>` (format: `skills/pm-metrics/references/metrics-format.md`) |
@@ -20,4 +22,5 @@ any PM skill. See `sdd-contract.md` for the sdd-owned artifacts.
 | `pm-config.yml` | any PM skill, after the user confirms | schema in `integrations.md` (`## pm-config.yml`) | — (YAML, no headings) |
 | `exports/*` | PM skills (fallback when no connected tool) | — (CSV/Markdown/text, see `integrations.md`) | — |
 
-`pm-discover` writes nothing of its own; it routes to the skills above and to `sdd-*`.
+`pm-discover` writes nothing of its own; it routes to the skills above and to the other `pm-*` skills.
+`pm-init` writes the context root itself (`README.md`, `.sdd.yml`, `.sdd.local.yml`, `.gitignore`), not a project artifact.

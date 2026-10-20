@@ -48,7 +48,7 @@ from `$CONTEXT_ROOT/.sdd.local.yml` when a root is resolved (Branch C); otherwis
 follows `references/plain-language.md`: say what each step does first, show the command once in
 parentheses, and keep the output free of schema talk.
 
-Installed in this plugin (9): `pm-help`, `pm-research-synthesis`, `pm-discover`, `pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-backlog-sync`, `pm-forecast`, `pm-status`.
+Installed in this plugin (12): `pm-help`, `pm-init`, `pm-shape`, `pm-prd`, `pm-research-synthesis`, `pm-discover`, `pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-backlog-sync`, `pm-forecast`, `pm-status`.
 Before recommending any `/pm-*` command, confirm it is in the host's
 available skills; if it is not, still name the step but say plainly that this command is not installed in
 this project, and never imply it will run.
@@ -70,7 +70,7 @@ this project, and never imply it will run.
 | # | Step | Skill | Plugin | Produces |
 |---|---|---|---|---|
 | 1 | Research (optional) | `pm-research-synthesis` | sdd-pm-skills | `research/<date>-<topic>.md` — insights with verbatim quotes |
-| 2 | Discover: scaffold, shape, PRD | `pm-discover` (routes to `sdd-init`, `sdd-frame`, `sdd-shape`, `sdd-prd`) | sdd-pm-skills + sdd-skills | `shape-notes.md`, `prd.md` (written by the sdd skills) |
+| 2 | Discover: scaffold, shape, PRD | `pm-discover` (routes to `pm-init`, `pm-shape`, `pm-prd`; each can also be run directly) | sdd-pm-skills + sdd-skills | `shape-notes.md` (`pm-shape`), `prd.md` (`pm-prd`) |
 | 3 | PRD review | `pm-prd-review` | sdd-pm-skills | `prd-review-<date>.md`; approved edits to `prd.md` |
 | 4 | Metrics | `pm-metrics` | sdd-pm-skills | `metrics.md` — success measures, guardrails, tracking plan |
 | 5 | Roadmap | `sdd-roadmap` | sdd-skills | `roadmap.md` — ordered, user-visible slices |
@@ -105,7 +105,8 @@ If ambiguous, prefer Branch B for a single word that matches a skill name, other
 
 Do not read project files. Walk the nine steps above in order, one or two plain sentences each, naming the
 skill and the plugin that owns it, and say which steps are optional (research, prioritize, forecast) and
-which come from `sdd-skills`. Lead with the first action, then stop:
+which come from `sdd-skills`. For step 2 say that the PM can also run its parts directly: `/pm-init` (set up the
+project folder), `/pm-shape` (shape the idea into notes) and `/pm-prd` (turn the notes into the PRD). Lead with the first action, then stop:
 
 ```
 ► Start here: /pm-discover "<one line about the product or feature idea>"
