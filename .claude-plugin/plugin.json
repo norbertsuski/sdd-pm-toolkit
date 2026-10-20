@@ -1,0 +1,9 @@
+{
+  "name": "sdd-pm-skills",
+  "version": "0.1.0",
+  "description": "Product-manager skills on top of the SDD (sdd-skills) workflow",
+  "author": {
+    "name": "Norbert Suski"
+  },
+  "repository": "https://gitlab.com/norbert.suski/sdd-pm-toolkit"
+}

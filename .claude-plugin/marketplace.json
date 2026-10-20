@@ -1,0 +1,13 @@
+{
+  "name": "sdd-pm-toolkit",
+  "owner": {
+    "name": "Norbert Suski"
+  },
+  "plugins": [
+    {
+      "name": "sdd-pm-skills",
+      "source": "./",
+      "description": "Product-manager skills for the SDD workflow"
+    }
+  ]
+}

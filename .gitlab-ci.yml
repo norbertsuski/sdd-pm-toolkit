@@ -1,0 +1,4 @@
+validate-pm-toolkit:
+  image: python:3.12-slim
+  script:
+    - bash scripts/validate-structure.sh
