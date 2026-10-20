@@ -85,6 +85,7 @@ identical in both modes.
   docs_location: <Confluence space key + parent page id | Notion parent page id>
   channel: slack | email | none
   channel_target: <#channel | email address list>
+  status_page: <Confluence page id | Notion page id>
   ```
 - **Write protocol** (every external write): preview (what, where, count) → explicit choice
   `Apply` / `Export file instead` / `Cancel` → sequential writes, stop on first error, persist
@@ -129,3 +130,4 @@ identical in both modes.
 - R25: `tracker-map.md` gains a `Synced hash` column (sha256 of the rendered description, 12 hex) so changed descriptions can be detected.
 - R26: export files are named `exports/<YYYY-MM-DD>-<what>.<ext>` per `integrations.md` (for example `exports/<date>-backlog.csv`).
 - R29: `forecast.md` frontmatter carries a machine-readable `deadline_risk` that `pm-status` reads; the script is unchanged.
+- `pm-config.yml` gains `status_page` (pm-status stores the Confluence/Notion page id).

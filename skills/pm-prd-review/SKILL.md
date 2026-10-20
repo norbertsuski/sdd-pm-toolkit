@@ -37,8 +37,8 @@ checked, or a saved review has findings left to triage.
 ## Relationship to other skills
 
 - `/sdd-prd` — writes `prd.md`. This skill never regenerates it; it edits sections in place when a finding is approved.
-- `/pm-discover` — the router. It sends a `status: draft` PRD here, and treats a PRD with a review report or a status
-  other than `draft` as reviewed.
+- `/pm-discover` — the router. It sends a PRD here until it counts as reviewed: `status` is `reviewed` or `locked`, or the
+  latest `prd-review-*.md` has `verdict: APPROVED`. A latest report with `NEEDS_ATTENTION` or `REJECTED` keeps it here.
 - `/pm-metrics` — may later write `metrics.md`; when that file exists this skill uses it for Measurability, when it does not
   that is not a finding.
 - `/sdd-roadmap` — the next sdd step after the review and the stack step. This skill never starts it.
@@ -115,7 +115,8 @@ Finding rules (one problem one finding, cap 12, no manufactured findings, no inv
 `references/review-dimensions.md`.
 
 Self-check before printing: every `Evidence` quote must occur in `prd.md` (or `metrics.md`) after collapsing line breaks and
-repeated spaces; a literal search (`grep -F`, or Read and compare) is enough. **A finding whose quote is not found is
+repeated spaces; check by Read and compare, and never put quote text on a command line (if a shell search is unavoidable,
+write the quote to a scratch file with the host file-write tool and use `grep -F -f <file>`). **A finding whose quote is not found is
 dropped, never reworded.** An `Absent:` finding must name a section or item that really is not there.
 
 Derive dimension verdicts and the overall verdict by the rules in `references/review-dimensions.md`: any open `blocker` →
@@ -336,6 +337,7 @@ Never writes `shape-notes.md` or `roadmap.md`.
 10. **Own files only.** Writes `prd-review-*.md`, the approved sections of `prd.md`, and `audience:` in `.sdd.local.yml`. `changes/**`, `archive/**` and `prd-vN.md` are never touched.
 11. **Never chain.** Do not start `/pm-discover`, `/sdd-roadmap` or any other skill; the human decides.
 12. **Mirror the user's language.** Findings and questions follow the user's language; quotes stay as written in the PRD; headings and enum values stay English.
+13. **No source/quote text on a command line.** Quote checks are done by Read and compare; a shell search, if unavoidable, takes the quote from a scratch file via `grep -F -f <file>`.
 
 ## Notes
 

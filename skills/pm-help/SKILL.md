@@ -165,11 +165,11 @@ project. Then stop.
 
 1. No `prd.md` and no `shape-notes.md` → `/pm-discover` (or `/pm-research-synthesis` first if the user has raw research).
 2. `shape-notes.md` present, no `prd.md` → `/sdd-prd` (or `/sdd-shape` if shaping looks unfinished: its `checkpoint.current_phase` is below 8).
-3. `prd.md` has `status: draft` → `/pm-prd-review` (if a `prd-review-*.md` exists with a verdict other than APPROVED, say the review can be resumed).
+3. `prd.md` is not reviewed (its `status` is not `reviewed` or `locked`, and the **latest** `prd-review-*.md` is absent or its `verdict` is not `APPROVED`) → `/pm-prd-review` (if a latest report exists with another verdict, say that review can be resumed).
 4. No `metrics.md` → `/pm-metrics`.
 5. No `roadmap.md` → `/sdd-roadmap` (the stack step comes before it; name it only if `foundation/tech-stack.md` or `foundation/stack-assessment.md` is absent and the user has not skipped it).
 6. No `prioritization.md` and at least two roadmap items are not `done` → `/pm-prioritize`.
-7. No `tracker-map.md` and `pm-config.yml` names a tracker other than `none` → `/pm-backlog-sync`.
+7. A roadmap exists, no `tracker-map.md` yet, and `pm-config.yml` is absent or its `tracker` is not explicitly `none` → `/pm-backlog-sync`.
 8. No `forecast.md` and `archive/` is not empty → `/pm-forecast`.
 9. No `status/*.md`, or the newest is more than 7 days old → `/pm-status`.
 10. Everything above is current → hand over to the build side: `/sdd-plan <change-id>` for the north-star slice if it is `ready` (else the first `ready` slice); if a change is already in `changes/`, say so and point at `/sdd-help <slug>` for its exact next command.

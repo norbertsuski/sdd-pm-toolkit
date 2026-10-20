@@ -251,6 +251,12 @@ if [[ -f "$RS/references/eval-cases.md" ]]; then
     grep -qF "$id" "$RS/references/eval-cases.md" || err "pm-research-synthesis eval-cases.md missing $id"
   done
 fi
+# No `grep -F` usage in the SKILL.md except `grep -F -f` (no quote text on a command line)
+if [[ -f "$RS/SKILL.md" ]]; then
+  if grep -E 'grep -[A-Za-z]*F' "$RS/SKILL.md" | grep -vE 'grep -F -f' | grep -q .; then
+    err "pm-research-synthesis/SKILL.md uses grep -F other than 'grep -F -f'"
+  fi
+fi
 ok "pm-research-synthesis files, headings and eval ids checked"
 
 # --- 15. pm-discover: files, routed sdd skills, git mv, stack gate, eval ids, contract blocks
@@ -310,6 +316,11 @@ fi
 if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
   grep -F 'prd-review-<date>.md' "$HELP_REFS/pm-artifacts.md" | grep -qF 'verdict' \
     || err "pm-artifacts.md prd-review row must name the verdict frontmatter key"
+fi
+if [[ -f "$PR/SKILL.md" ]]; then
+  if grep -E 'grep -[A-Za-z]*F' "$PR/SKILL.md" | grep -vE 'grep -F -f' | grep -q .; then
+    err "pm-prd-review/SKILL.md uses grep -F other than 'grep -F -f'"
+  fi
 fi
 ok "pm-prd-review files, dimensions, mandate strings and eval ids checked"
 

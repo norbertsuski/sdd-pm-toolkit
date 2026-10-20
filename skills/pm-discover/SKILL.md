@@ -167,6 +167,9 @@ return to Step 2 (root discovery runs again).
    If it sits in `foundation/<slugB>/` while the research file sits in `foundation/<slugA>/research/` and
    `<slugA>` ≠ `<slugB>`, the research and the shaping ended up in different folders. **Offer, never do silently**:
    > Your research is in "<A>" but the product was saved as "<B>". Move the research next to it? 1. Yes, move it (Recommended) 2. Leave it where it is 3. Not sure
+   Before building the command, check that **both** `<slugA>` and `<slugB>` (taken from on-disk folder names) match
+   `^[a-z0-9]+(-[a-z0-9]+)*$`; if either does not, STOP, run nothing, and explain that a folder name is not a plain slug so
+   the move must be done by hand.
    On yes run `git mv foundation/<slugA>/research foundation/<slugB>/research` (paths under `$CONTEXT_ROOT`), tell the
    operator it is staged but not committed, and leave the old folder alone; if it is empty now, mention that, do not delete it.
    Fallbacks, each also offered, not assumed: the research folder is untracked (`git mv` fails) → offer plain `mv`;
@@ -211,7 +214,7 @@ Do not invoke any stack skill from here: the technology choice is the developer'
 project's `prd.md` path (it reads the root from that path and runs its own readiness check; do not duplicate it). Hand back.
 
 **`roadmapped`** — nothing to route. End with the hand-over (Step 5), name `/pm-prioritize` (if two or more items are not done) and
-`/pm-backlog-sync` (if `pm-config.yml` names a tracker), each only if installed; otherwise say they are not installed in this project.
+`/pm-backlog-sync` (if no `tracker-map.md` exists yet and `pm-config.yml` is absent or its `tracker` is not explicitly `none`), each only if installed; otherwise say they are not installed in this project.
 
 ### Step 5 — Hand over (end of each turn)
 

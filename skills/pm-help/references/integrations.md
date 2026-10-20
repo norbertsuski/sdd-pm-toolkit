@@ -68,6 +68,7 @@ When no matching tool is available, or the user chooses `Export file instead`, w
 |---|---|
 | Jira / Linear import | `exports/<date>-<what>.csv` |
 | Confluence / Notion page | `exports/<date>-<what>.md` |
+| Tracker checklist (Linear, or any manual checklist) | `exports/<date>-backlog.md` |
 | Slack / email text | `exports/<date>-<what>.txt` |
 
 `<date>` is `YYYY-MM-DD` from `date +%Y-%m-%d`. Exports are PM-owned files and may be overwritten by a
