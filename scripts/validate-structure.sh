@@ -479,6 +479,42 @@ if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
 fi
 ok "pm-forecast files, script, tests, CI line, headings and eval ids checked"
 
+# --- 21. pm-backlog-sync: files, tracker-map format, mandate strings, eval ids, CI line, artifact row
+BS=skills/pm-backlog-sync
+for f in SKILL.md references/tracker-map-format.md references/eval-cases.md; do
+  [[ -f "$BS/$f" ]] || err "missing $BS/$f"
+done
+[[ -f scripts/validate-pm-evals.sh ]] || err "missing scripts/validate-pm-evals.sh"
+if [[ -f .gitlab-ci.yml ]]; then
+  grep -qxF -- '    - bash scripts/validate-pm-evals.sh' .gitlab-ci.yml \
+    || err ".gitlab-ci.yml must run: bash scripts/validate-pm-evals.sh"
+fi
+if [[ -f "$BS/references/tracker-map-format.md" ]]; then
+  for h in "## Frontmatter" "## Mapping table" "## Orphans" "## Issue mapping" "## Description template" "## Sync decision table"; do
+    grep -qxF -- "$h" "$BS/references/tracker-map-format.md" || err "tracker-map-format.md missing heading: $h"
+  done
+  grep -qxF -- '| Roadmap ID | Change ID | Issue key | Issue URL | Synced title | Synced hash | Synced at |' "$BS/references/tracker-map-format.md" \
+    || err "tracker-map-format.md missing the mapping table header"
+fi
+if [[ -f "$BS/SKILL.md" ]]; then
+  for s in '../pm-help/references/integrations.md' 'never deletes' 'Export file instead' 'Contract check procedure' \
+           'CONTRACT MISMATCH' 'tracker-map.md' 'pm-config.yml' 'sync_action' 'relink-ask' '## Orphans' \
+           'Summary,Issue Type,Description,Labels' 'sdd:<change-id>' 'is blocked by' 'python3 -c' \
+           'pm-backlog-sync:csv-script' 'Apply'; do
+    grep -qF -- "$s" "$BS/SKILL.md" || err "pm-backlog-sync/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$BS/references/eval-cases.md" ]]; then
+  for id in BS-01 BS-02 BS-03 BS-04 BS-05 BS-06; do
+    grep -qF "$id" "$BS/references/eval-cases.md" || err "pm-backlog-sync eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F '`tracker-map.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'tracker_project' \
+    || err "pm-artifacts.md tracker-map.md row must name the tracker_project frontmatter key"
+fi
+ok "pm-backlog-sync files, tracker-map format, mandate strings, eval ids and CI line checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"

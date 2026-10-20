@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (7 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (8 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -41,6 +41,7 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | `pm-prd-review` | Reviews the PRD on seven dimensions (PASS / CONCERNS / FAIL, quoted evidence), gives an APPROVED / NEEDS_ATTENTION / REJECTED verdict, saves a report, and triages findings one by one: approved fixes edit `prd.md` (diff shown first); may set `status: reviewed`, never `locked`. |
 | `pm-metrics` | Derives a north-star metric (you pick from 2-3 candidates), input metrics, a mapping of every PRD success criterion to a metric (target, baseline, window, owner), guardrail metrics and an event tracking plan from the PRD; writes `metrics.md`. Never invents targets or baselines: gaps are marked `TBD — Owner: <role>` and listed as open questions. |
 | `pm-prioritize` | Scores every roadmap item that is not done (without a roadmap: the PRD's requirements) with RICE (recommended), ICE or MoSCoW from numbers you give; scoring is computed with `python3`, never guessed. Reports dependency conflicts ("A needs B first"), proposes a sequence you can use for a `/sdd-roadmap` re-run or a hand-edit of the roadmap, and writes `prioritization.md`. Never edits `roadmap.md`. |
+| `pm-backlog-sync` | Copies the roadmap's Backlog Handoff into Jira or Linear through whatever tracker connection the host has, safely and repeatably: one issue per item (slice = Story, foundation = Task or a `foundation` label), title from the roadmap, description with outcome, PRD refs and the acceptance criteria of the linked user stories, label `sdd:<change-id>`, "is blocked by" links for prerequisites. Remembers which item became which issue in `tracker-map.md` (never in `roadmap.md`), so a re-run creates only what is new, updates only what changed and asks before anything unusual. Never deletes issues; roadmap items that vanished are reported as orphans. Every write waits for an explicit `Apply`. Without a tracker connection it writes a Jira CSV import file or a Markdown checklist and says no issues were created. |
 | `pm-forecast` | Answers "when will we be done?" with three dates (likely / very likely / almost certain), never one: a bundled stdlib `python3` script replays the weekly throughput of archived changes against the items left on the roadmap (Monte Carlo), checks the PRD's hard deadline, and writes `forecast.md`. With too little history it gives no dates and says what is needed. Never edits `roadmap.md`, which stays estimate-free. |
 
 ## Ownership

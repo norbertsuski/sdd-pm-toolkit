@@ -2,4 +2,5 @@ validate-pm-toolkit:
   image: python:3.12-slim
   script:
     - bash scripts/validate-structure.sh
+    - bash scripts/validate-pm-evals.sh
     - python3 -m unittest discover -s tests -v
