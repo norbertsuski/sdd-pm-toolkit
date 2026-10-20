@@ -10,7 +10,7 @@ any PM skill. See `sdd-contract.md` for the sdd-owned artifacts.
 
 | Path | Written by | Frontmatter | Required headings |
 |---|---|---|---|
-| `research/*.md` | `pm-research-synthesis` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
+| `research/<date>-<topic>.md` (matches `research/*.md`) | `pm-research-synthesis` | `project`, `topic`, `created`, `updated`, `sources` (count) | `## Sources`, `## Insights`, `## Jobs to Be Done`, `## Pains & Gains`, `## Contradictions & Surprises`, `## Open Questions`, `## Seed for shaping` (format: `skills/pm-research-synthesis/references/insights-format.md`) |
 | `prd-review-<date>.md` | `pm-prd-review` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
 | `metrics.md` | `pm-metrics` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
 | `prioritization.md` | `pm-prioritize` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |

@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (1 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (2 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -36,6 +36,7 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | Skill | Purpose |
 |---|---|
 | `pm-help` | Map of the PM flow and a "you are here" report for a project. Read-only. |
+| `pm-research-synthesis` | Turns interview transcripts, notes and survey exports into evidence-linked insights (verbatim quotes, pseudonymized) with a seed for shaping. |
 
 ## Ownership
 

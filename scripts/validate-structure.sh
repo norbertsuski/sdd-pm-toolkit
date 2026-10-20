@@ -231,6 +231,28 @@ for dir in skills/pm-*/; do
 done
 ok "ownership line present in every skill"
 
+# --- 14. pm-research-synthesis: files, insights-format headings, eval ids
+RS=skills/pm-research-synthesis
+for f in SKILL.md references/insights-format.md references/eval-cases.md; do
+  [[ -f "$RS/$f" ]] || err "missing $RS/$f"
+done
+if [[ -f "$RS/references/insights-format.md" ]]; then
+  for h in "## Sources" "## Insights" "## Jobs to Be Done" "## Pains & Gains" \
+           "## Contradictions & Surprises" "## Open Questions" "## Seed for shaping"; do
+    grep -qxF -- "$h" "$RS/references/insights-format.md" || err "insights-format.md missing heading: $h"
+  done
+fi
+if [[ -f "$RS/SKILL.md" ]]; then
+  grep -qF "verbatim" "$RS/SKILL.md" || err "pm-research-synthesis/SKILL.md must mention 'verbatim'"
+  grep -qF "P1" "$RS/SKILL.md" || err "pm-research-synthesis/SKILL.md must mention the 'P1' pseudonym scheme"
+fi
+if [[ -f "$RS/references/eval-cases.md" ]]; then
+  for id in RS-01 RS-02 RS-03 RS-04 RS-05; do
+    grep -qF "$id" "$RS/references/eval-cases.md" || err "pm-research-synthesis eval-cases.md missing $id"
+  done
+fi
+ok "pm-research-synthesis files, headings and eval ids checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
