@@ -137,7 +137,7 @@ if [[ -f "$CONTRACT" ]]; then
            "## Roadmap contract" "## Change contract" "## Contract check procedure"; do
     grep -qxF -- "$h" "$CONTRACT" || err "sdd-contract.md missing heading: $h"
   done
-  for b in prd-greenfield:10 prd-brownfield:11 roadmap:10 roadmap-columns:1 change-keys:1 prd-frontmatter:1; do
+  for b in prd-greenfield:10 prd-brownfield:11 roadmap:10 roadmap-columns:1 change-keys:7 change-verdicts:5 prd-frontmatter:1; do
     bname=${b%%:*}; bmin=${b##*:}
     bn=$(contract_block "$bname" | wc -l | tr -d ' ')
     grep -qxF "<!-- $bname:start -->" "$CONTRACT" && grep -qxF "<!-- $bname:end -->" "$CONTRACT" \
