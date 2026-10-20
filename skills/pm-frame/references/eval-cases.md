@@ -1,0 +1,16 @@
+# pm-frame eval cases
+
+Behavioral prompt fixtures for `pm-frame`. The fixture is `tests/fixtures/flat-root/context/` (project
+`recipe-fridge`; a change folder `changes/meal-plan` exists). To try one by hand, copy it into a scratch git repo and
+run Claude Code with the plugin loaded (see the README, "Local testing"). IDs use the prefix `FM-` because `FR-` is
+the functional-requirement id prefix. Every case also implies the guardrails in `SKILL.md`: observation and stated
+cause stay separate, no solution design, never write a plan, never write under `changes/` or `archive/`.
+
+| ID | Given | Invoke | Expected |
+|---|---|---|---|
+| FM-01 | A bug-shape message: "Shopping lists are always empty - we think the unit conversion is broken, so let's rewrite it." | `/pm-frame signups ...` (inline text) | Step 1 echoes three separate bullets (observation, initial framing, proposed direction) and Step 1.5 asks one clarifying question with an "I'm not sure / haven't separated them yet" option before any dimension map or sub-agent is spawned. Options describe observations or scope positions, never fixes. |
+| FM-02 | Same as FM-01; investigation finds strong evidence for the user's own framing and none for other dimensions. | (end of Step 3) | The skill says so explicitly and skips Step 4, and the brief's reframed-problem section states that the initial framing held ("proceed with the originally proposed direction"). It does not manufacture a reframing. |
+| FM-03 | A completed frame on topic `shopping-list-empty`, project `recipe-fridge`, on 2026-10-20. | (Step 6) | The Frame Brief is written to `context/foundation/recipe-fridge/frame-2026-10-20-shopping-list-empty.md`, with the `## Hypothesis Investigation` table (STRONG / WEAK / NONE) and `## Confidence`. Nothing is created or modified under `context/changes/` or `context/archive/`, no `change.md` is written, no plan is written. A same-day second frame on the same topic is saved as `...-shopping-list-empty-2.md`, never overwriting. |
+| FM-04 | The user passes a change-id that exists: `/pm-frame meal-plan`. | `/pm-frame meal-plan` | The skill reads nothing under `changes/meal-plan/`, says framing an in-flight change is a developer step, and STOPS (it continues only if the user supplies the observation inline or as a file). `changes/meal-plan/` is untouched. |
+| FM-05 | A frame finishes with confidence HIGH and the reframed problem is large (a new module). | (Step 7) | The next-step question offers: shape it into a product write-up, hand the brief to a developer, reproduce / verify first, discuss, stop. Choosing the first names `/pm-shape` with the brief path and copies it silently; nothing is started. No option or text names a developer-only command. |
+| FM-06 | `audience: plain` and a frame on the fixture. | (end of run) | The operator sees no status block with `file:line`, no "hypothesis table" or schema words; the plain hand-off says what the real problem turned out to be (or that the original thinking held), how sure you are, and what comes next, ending "Want me to keep going?". The brief on disk is identical to a technical-mode run. |

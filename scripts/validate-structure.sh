@@ -659,6 +659,90 @@ grep -qF '/pm-shape' skills/pm-help/SKILL.md && grep -qF '/pm-prd' skills/pm-hel
   || err "pm-help/SKILL.md Branch A flow must name /pm-shape and /pm-prd"
 ok "vendored pm-init, pm-shape, pm-prd, prd-schema, plain-language headings, VENDORED.md and eval ids checked"
 
+# --- 24. vendored pm-roadmap / pm-frame / pm-map: files, no upstream refs, scripts, render, eval ids, registry
+for s in pm-roadmap pm-frame pm-map; do
+  d=skills/$s
+  [[ -f "$d/SKILL.md" ]] || { err "missing $d/SKILL.md"; continue; }
+  head -5 "$d/SKILL.md" | grep -q "^name: $s$" || err "$s/SKILL.md frontmatter name must be $s"
+  grep -q "^description:" "$d/SKILL.md" || err "$s/SKILL.md has no description"
+  [[ -f "$d/references/eval-cases.md" ]] || err "missing $d/references/eval-cases.md"
+  # no upstream repo/plugin/command reference; the allowed token is the roadmap column-header literal
+  if [[ -d "$d" ]] && grep -rhn -v '^$' "$d" | sed 's/Ready for `\/sdd-plan`//g' | grep -E 'sdd-toolkit|sdd-skills|/sdd-|\.\./sdd-|\.claude/skills/sdd-'; then
+    err "$d contains a reference to the upstream repo/plugin or a /sdd- command"
+  fi
+done
+for f in skills/pm-map/render-roadmap-map.sh skills/pm-map/roadmap-map-hook.sh; do
+  [[ -f "$f" ]] || { err "missing $f"; continue; }
+  [[ -x "$f" ]] || err "$f must be executable"
+  grep -nE 'sdd-|/sdd' "$f" && err "$f contains an sdd- string"
+done
+RMS=skills/pm-roadmap/SKILL.md
+if [[ -f "$RMS" ]]; then
+  grep -qF '| Roadmap ID | Change ID              | Suggested issue title         | Ready for `/sdd-plan` | Notes                       |' "$RMS" \
+    || err "pm-roadmap/SKILL.md must keep the Backlog Handoff header row byte-identical"
+  for h in '## Vision recap' '## North star' '## At a glance' '## Baseline' '## Foundations' '## Slices' \
+           '## Backlog Handoff' '## Open Roadmap Questions' '## Parked' '## Done'; do
+    grep -qxF -- "$h" "$RMS" || err "pm-roadmap/SKILL.md template missing heading: $h"
+  done
+  grep -qF 'Writes only:' "$RMS" || err "pm-roadmap/SKILL.md missing ownership line"
+fi
+FRS=skills/pm-frame/SKILL.md
+if [[ -f "$FRS" ]]; then
+  for s in 'frame-<YYYY-MM-DD>-<topic>.md' 'never writes under' 'changes/' 'Frame Brief' '## Hypothesis Investigation'; do
+    grep -qF -- "$s" "$FRS" || err "pm-frame/SKILL.md must mention '$s'"
+  done
+fi
+MPS=skills/pm-map/SKILL.md
+if [[ -f "$MPS" ]]; then
+  for s in 'Base directory for this skill' 'CLAUDE_PLUGIN_ROOT' 'render-roadmap-map.sh' 'STOP'; do
+    grep -qF -- "$s" "$MPS" || err "pm-map/SKILL.md must mention '$s'"
+  done
+fi
+# render test: run the renderer on a copy of the fixture roadmap and check the map
+RTMP=$(mktemp -d)
+if [[ -f skills/pm-map/render-roadmap-map.sh && -f "$FIX/foundation/recipe-fridge/roadmap.md" ]]; then
+  mkdir -p "$RTMP/foundation/recipe-fridge"
+  cp "$FIX/foundation/recipe-fridge/roadmap.md" "$RTMP/foundation/recipe-fridge/roadmap.md"
+  if bash skills/pm-map/render-roadmap-map.sh "$RTMP/foundation/recipe-fridge/roadmap.md" >/dev/null 2>&1; then
+    MAPF="$RTMP/foundation/recipe-fridge/roadmap-map.md"
+    [[ -f "$MAPF" ]] || err "render-roadmap-map.sh did not write roadmap-map.md"
+    if [[ -f "$MAPF" ]]; then
+      grep -qE 'graph|flowchart' "$MAPF" || err "roadmap-map.md has no graph/flowchart"
+      for id in F-01 S-01 S-02 S-03 S-04 S-05 S-06; do
+        grep -qF "$id" "$MAPF" || err "roadmap-map.md missing node $id"
+      done
+    fi
+  else
+    err "render-roadmap-map.sh failed on the fixture roadmap"
+  fi
+else
+  err "render test inputs missing (script or fixture roadmap)"
+fi
+rm -rf "$RTMP"
+if [[ -f VENDORED.md ]]; then
+  for f in skills/pm-roadmap/SKILL.md skills/pm-frame/SKILL.md skills/pm-map/SKILL.md \
+           skills/pm-map/render-roadmap-map.sh skills/pm-map/roadmap-map-hook.sh; do
+    grep -qF -- "\`$f\`" VENDORED.md || err "VENDORED.md has no row for $f"
+  done
+fi
+for pair in pm-roadmap:RM pm-frame:FM pm-map:MP; do
+  s=${pair%%:*}; px=${pair##*:}
+  ef=skills/$s/references/eval-cases.md
+  [[ -f "$ef" ]] || continue
+  n=$(grep -cE "^\| $px-[0-9]+ \|" "$ef")
+  [[ "$n" -ge 4 ]] || err "$s eval-cases.md needs at least 4 $px- rows (found $n)"
+done
+for pair in 'roadmap.md:pm-roadmap' 'roadmap-map.md:pm-map' 'frame-<date>-<topic>.md:pm-frame'; do
+  row=${pair%%:*}; owner=${pair##*:}
+  grep -F "| \`$row\`" "$HELP_REFS/pm-artifacts.md" | grep -qF "\`$owner\`" \
+    || err "pm-artifacts.md has no row for $row written by $owner"
+done
+for s in /pm-roadmap /pm-frame /pm-map; do
+  grep -qF "$s" skills/pm-help/SKILL.md || err "pm-help/SKILL.md must mention $s"
+done
+grep -qF 'Installed in this plugin (15)' skills/pm-help/SKILL.md || err "pm-help/SKILL.md must say 'Installed in this plugin (15)'"
+ok "vendored pm-roadmap, pm-frame, pm-map, map scripts, render test, eval ids and registry checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"

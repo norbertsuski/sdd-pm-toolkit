@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (12 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (15 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -37,8 +37,11 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 |---|---|
 | `pm-help` | Map of the PM flow and a "you are here" report for a project. Read-only. |
 | `pm-init` | Scaffolds the `context/` root: a flat-layout `README.md`, `.sdd.yml` (`layout: flat`), and the per-person, git-ignored `.sdd.local.yml` that remembers whether you want plain language or the technical view. Idempotent: re-running changes nothing that exists. Optional target folder (`/pm-init frontend/posting`). |
+| `pm-frame` | Challenges the framing before anything is shaped or planned: separates what is observed from the stated cause and the proposed fix, maps where the problem could really originate, investigates each candidate with parallel read-only agents, and writes a Frame Brief (`frame-<date>-<topic>.md`) that may conclude the original framing was right. Never writes a plan and never touches a developer's `changes/` folders; hands a large reframed problem to `/pm-shape` and a small one to a developer. |
 | `pm-shape` | Facilitates the discovery conversation that turns an idea (new product or a change to an existing one) into `shape-notes.md`: one question at a time, never inventing content, resumable from a checkpoint, plain language by default. Detects whether the product is new or existing on its own, keeps stack and tooling choices out, and ends with a closing quality cross-check that warns but never blocks. |
 | `pm-prd` | Turns `shape-notes.md` (or pasted raw notes) into a schema-conformant `prd.md` (10 sections for a new product, 11 for a change to an existing one). Never invents content: every gap lands in Open Questions. Warns when the input is thin, saves as `prd-vN.md` instead of overwriting, and points to `/pm-prd-review` next. |
+| `pm-roadmap` | Turns the PRD into `roadmap.md`: ordered vertical slices (plus the foundations that unblock them) with prerequisites, parallel tracks, blockers and unknowns, a Backlog Handoff table and a recommended next move. Probes the codebase baseline with parallel read-only agents, asks at most three anchor questions with a grounded recommendation each, and aborts on a self-review failure (an uncovered must-have, a dependency cycle) instead of writing a bad file. No estimates or dates; archives the previous roadmap instead of overwriting. |
+| `pm-map` | Draws the roadmap as a Mermaid dependency graph (`roadmap-map.md`): slices as nodes, prerequisites as edges, coloured done / ready / blocked, north-star slice marked. A bundled script does the drawing, so the same roadmap always gives the same picture; never edits `roadmap.md`. An optional hook can keep the map fresh. |
 | `pm-research-synthesis` | Turns interview transcripts, notes and survey exports into evidence-linked insights (verbatim quotes, pseudonymized) with a seed for shaping. |
 | `pm-discover` | The discovery router: derives the project's stage from files on disk and walks the PM, one human-gated step at a time, through `/sdd-init`, `/sdd-shape`, `/sdd-prd`, `/pm-prd-review`, the stack step and `/sdd-roadmap`. Writes nothing itself. |
 | `pm-prd-review` | Reviews the PRD on seven dimensions (PASS / CONCERNS / FAIL, quoted evidence), gives an APPROVED / NEEDS_ATTENTION / REJECTED verdict, saves a report, and triages findings one by one: approved fixes edit `prd.md` (diff shown first); may set `status: reviewed`, never `locked`. |
@@ -59,14 +62,14 @@ Start anywhere; `/pm-help` shows the map and, given a project name, where that p
                   sdd-shape → sdd-prd)
                                                                           │
  status ◀── forecast ◀── backlog-sync ◀── prioritize ◀── roadmap ◀────────┘
- (pm-status)  (pm-forecast) (pm-backlog-sync) (pm-prioritize) (sdd-roadmap)
+ (pm-status)  (pm-forecast) (pm-backlog-sync) (pm-prioritize) (pm-roadmap, drawn by pm-map)
                                                                │
                                                   build side: sdd-plan → sdd-implement → sdd-archive
 ```
 
 1. `/pm-help` for the map. Optional: `/pm-research-synthesis @interviews/*.md <topic>` first.
 2. `/pm-discover "<idea>"` walks init, shape and PRD, one confirmed step at a time. Then `/pm-prd-review`, then `/pm-metrics`.
-3. `/sdd-roadmap` (from `sdd-skills`, after the stack step) turns the PRD into ordered slices.
+3. `/pm-roadmap` turns the PRD into ordered slices (after the stack step a developer runs, when there is one); `/pm-map` draws them as a graph.
 4. `/pm-prioritize`, `/pm-backlog-sync` and `/pm-forecast` work from the roadmap; `/pm-status` writes the stakeholder report.
 5. The build side (`/sdd-plan`, `/sdd-implement`, `/sdd-archive`) belongs to `sdd-skills`. Steps 4 and 5 repeat as the project moves.
 
@@ -81,7 +84,9 @@ The PM skills never take over artifacts owned by `sdd-skills`. Each artifact und
 | `.sdd.local.yml` (`audience:`) | `pm-init` and any audience-aware skill | read; write `audience:` only, same protocol as the plain-language reference |
 | `foundation/<slug>/shape-notes.md` | `pm-shape` | write (`pm-shape`); read elsewhere |
 | `foundation/<slug>/prd.md` | `pm-prd` (+ review skills flip `status`) | write (`pm-prd`); `pm-prd-review` edits with per-finding approval, may set `status: reviewed` |
-| `foundation/<slug>/roadmap.md` | `/sdd-roadmap`, `/sdd-archive` (Done) | read only |
+| `foundation/<slug>/roadmap.md` | `pm-roadmap` (the developer archive step sets items `done` and appends `## Done`) | write (`pm-roadmap`); read elsewhere |
+| `foundation/<slug>/roadmap-map.md` | `pm-map` | write |
+| `foundation/<slug>/frame-<date>-<topic>.md` | `pm-frame` | write |
 | `changes/**`, `archive/**` | sdd change skills | read only |
 | `foundation/<slug>/research/*.md` | `pm-research-synthesis` | write |
 | `foundation/<slug>/prd-review-<date>.md` | `pm-prd-review` | write |

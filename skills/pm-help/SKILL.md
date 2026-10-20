@@ -48,7 +48,7 @@ from `$CONTEXT_ROOT/.sdd.local.yml` when a root is resolved (Branch C); otherwis
 follows `references/plain-language.md`: say what each step does first, show the command once in
 parentheses, and keep the output free of schema talk.
 
-Installed in this plugin (12): `pm-help`, `pm-init`, `pm-shape`, `pm-prd`, `pm-research-synthesis`, `pm-discover`, `pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-backlog-sync`, `pm-forecast`, `pm-status`.
+Installed in this plugin (15): `pm-help`, `pm-init`, `pm-frame`, `pm-shape`, `pm-prd`, `pm-roadmap`, `pm-map`, `pm-research-synthesis`, `pm-discover`, `pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-backlog-sync`, `pm-forecast`, `pm-status`.
 Before recommending any `/pm-*` command, confirm it is in the host's
 available skills; if it is not, still name the step but say plainly that this command is not installed in
 this project, and never imply it will run.
@@ -62,7 +62,7 @@ this project, and never imply it will run.
                   sdd-shape → sdd-prd)
                                                                           │
  status ◀── forecast ◀── backlog-sync ◀── prioritize ◀── roadmap ◀────────┘
- (pm-status)  (pm-forecast) (pm-backlog-sync) (pm-prioritize) (sdd-roadmap)
+ (pm-status)  (pm-forecast) (pm-backlog-sync) (pm-prioritize) (pm-roadmap, drawn by pm-map)
                                                                │
                                                   build side: sdd-plan → sdd-implement → sdd-archive
 ```
@@ -70,10 +70,10 @@ this project, and never imply it will run.
 | # | Step | Skill | Plugin | Produces |
 |---|---|---|---|---|
 | 1 | Research (optional) | `pm-research-synthesis` | sdd-pm-skills | `research/<date>-<topic>.md` — insights with verbatim quotes |
-| 2 | Discover: scaffold, shape, PRD | `pm-discover` (routes to `pm-init`, `pm-shape`, `pm-prd`; each can also be run directly) | sdd-pm-skills + sdd-skills | `shape-notes.md` (`pm-shape`), `prd.md` (`pm-prd`) |
+| 2 | Discover: scaffold, shape, PRD | `pm-discover` (routes to `pm-init`, `pm-shape`, `pm-prd`; each can also be run directly; `pm-frame` challenges the framing of a problem first when needed) | sdd-pm-skills + sdd-skills | `shape-notes.md` (`pm-shape`), `prd.md` (`pm-prd`) |
 | 3 | PRD review | `pm-prd-review` | sdd-pm-skills | `prd-review-<date>.md`; approved edits to `prd.md` |
 | 4 | Metrics | `pm-metrics` | sdd-pm-skills | `metrics.md` — success measures, guardrails, tracking plan |
-| 5 | Roadmap | `sdd-roadmap` | sdd-skills | `roadmap.md` — ordered, user-visible slices |
+| 5 | Roadmap | `pm-roadmap` (`pm-map` draws it as a dependency graph) | sdd-pm-skills | `roadmap.md` — ordered, user-visible slices; `roadmap-map.md` — the graph |
 | 6 | Prioritize | `pm-prioritize` | sdd-pm-skills | `prioritization.md` (the roadmap is never edited) |
 | 7 | Backlog sync | `pm-backlog-sync` | sdd-pm-skills | tracker issues + `tracker-map.md` |
 | 8 | Forecast | `pm-forecast` | sdd-pm-skills | `forecast.md` — dates as ranges, only with enough history |
@@ -106,7 +106,7 @@ If ambiguous, prefer Branch B for a single word that matches a skill name, other
 Do not read project files. Walk the nine steps above in order, one or two plain sentences each, naming the
 skill and the plugin that owns it, and say which steps are optional (research, prioritize, forecast) and
 which come from `sdd-skills`. For step 2 say that the PM can also run its parts directly: `/pm-init` (set up the
-project folder), `/pm-shape` (shape the idea into notes) and `/pm-prd` (turn the notes into the PRD). Lead with the first action, then stop:
+project folder), `/pm-frame` (check you are solving the right problem), `/pm-shape` (shape the idea into notes) and `/pm-prd` (turn the notes into the PRD); for step 5 it can also name `/pm-roadmap` (the ordered build plan) and `/pm-map` (the plan as a picture). Lead with the first action, then stop:
 
 ```
 ► Start here: /pm-discover "<one line about the product or feature idea>"
