@@ -186,7 +186,7 @@ If pressure-testing strengthens the leading hypothesis, lock confidence. If it s
 
 Resolve where to write before writing:
 
-- Resolve `CONTEXT_ROOT` (see the top of this file) and the project folder `$CONTEXT_ROOT/foundation/<slug>/` (legacy: `context/<app>/foundation/<slug>/`): if exactly one project folder exists use it; if several, ask which one the frame belongs to; if none exists, create `$CONTEXT_ROOT/foundation/<slug>/` with a kebab-case `<slug>` derived from the observation (confirm it in one line).
+- Resolve `CONTEXT_ROOT` (see the top of this file) and the project folder `$CONTEXT_ROOT/foundation/<slug>/` (legacy: `context/<app>/foundation/<slug>/`): if exactly one project folder exists, do not assume it: confirm it in one line ("File this under <project>? 1. Yes (Recommended) 2. A new project" - in plain mode "Is this about <Project name in words>, or a new project?") and on "a new project" ask for the name and derive the slug as below; if several, ask which one the frame belongs to (and offer "a new project" too); if none exists, create `$CONTEXT_ROOT/foundation/<slug>/` with a kebab-case `<slug>` derived from the observation (confirm it in one line).
 - The file is `frame-<YYYY-MM-DD>-<topic>.md` (`<topic>`: a short kebab-case name for the observation; a same-day second frame on the same topic gets `-2`). Never overwrite an existing frame file.
 - This skill NEVER writes under `$CONTEXT_ROOT/changes/` or `$CONTEXT_ROOT/archive/` and never creates a change folder. (A developer who wants the brief inside a change folder copies the file there by hand.) If the user's input pointed at an archived or in-flight change, the brief still lands in the project folder.
 

@@ -6,11 +6,12 @@
 # Otherwise it's a silent no-op. This keeps an already-generated map in sync
 # without re-invoking /pm-map; the "only if it exists" guard makes it opt-in.
 #
-# Wire it up in .claude/settings.json (use the absolute path of this file where the plugin is
-# installed, or "${CLAUDE_PLUGIN_ROOT}/skills/pm-map/roadmap-map-hook.sh" when the host expands it):
+# Wire it up in your own .claude/settings.json with the absolute path of this file where the plugin is
+# installed (replace /path/to/plugin); ${CLAUDE_PLUGIN_ROOT} is expanded only inside plugin-shipped hooks,
+# not in a settings.json you write yourself:
 #   { "hooks": { "PostToolUse": [ { "matcher": "Edit|Write",
 #       "hooks": [ { "type": "command",
-#         "command": "${CLAUDE_PLUGIN_ROOT}/skills/pm-map/roadmap-map-hook.sh" } ] } ] } }
+#         "command": "/path/to/plugin/skills/pm-map/roadmap-map-hook.sh" } ] } ] } }
 #
 # The hook JSON arrives on stdin; we only need tool_input.file_path.
 

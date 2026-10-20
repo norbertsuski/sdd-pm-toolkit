@@ -4,7 +4,7 @@ description: >
   Generate prd.md from shape-notes.md (or raw notes) against the locked PRD
   schema, written into the project subfolder $CONTEXT_ROOT/foundation/<project-slug>/
   (legacy: context/<app>/foundation/<project-slug>/) alongside the shape-notes
-  it was generated from. Auto-routes to greenfield (10 sections) or brownfield
+  it was generated from (raw notes from elsewhere: into the project you confirm). Auto-routes to greenfield (10 sections) or brownfield
   (11 sections) template based on context_type in shape-notes.md or cwd
   auto-detection. Use when the user has shaping notes ready and wants a
   schema-conformant PRD written to disk. Trigger phrases: "write the PRD",
@@ -14,9 +14,9 @@ description: >
 
 # PRD: Generate prd.md from shape-notes
 
-This skill is the second link in the discovery chain: `/pm-shape → /pm-prd`, then `/pm-prd-review`; a developer then chooses the tech stack (greenfield) or assesses the existing stack (brownfield). Its single job: take a shaped notes file and emit a `prd.md` — written into the same project subfolder the input lives in (`$CONTEXT_ROOT/foundation/<project-slug>/prd.md`, legacy: `context/<app>/foundation/<project-slug>/prd.md`; see the schema's "Output paths" section) — that conforms to the locked PRD schema, routing every gap to `## Open Questions` rather than inventing content.
+This skill is the second link in the discovery chain: `/pm-shape → /pm-prd`, then `/pm-prd-review`; a developer then chooses the tech stack (greenfield) or assesses the existing stack (brownfield). Its single job: take a shaped notes file and emit a `prd.md` — written into the project subfolder the input lives in, or, for raw notes from anywhere else, into the project folder you confirm (`$CONTEXT_ROOT/foundation/<project-slug>/prd.md`, legacy: `context/<app>/foundation/<project-slug>/prd.md`; see the schema's "Output paths" section) — that conforms to the locked PRD schema, routing every gap to `## Open Questions` rather than inventing content.
 
-This skill operates under the `CONTEXT_ROOT` handed to it (or the resolved input path it is given) — it does not run its own root discovery. `app:` may be absent for flat roots; do not require it. For legacy roots, `<app>` is the resolved workspace directory's name (e.g. `assets`); it is inherited from the input path's first segment after `context/`, never re-asked.
+This skill operates under the `CONTEXT_ROOT` handed to it (or the resolved input path it is given) — it does not run its own root discovery, except when the input is not inside a `foundation/<project-slug>/` folder of a context root (raw notes; see Step 1). `app:` may be absent for flat roots; do not require it. For legacy roots, `<app>` is the resolved workspace directory's name (e.g. `assets`); it is inherited from the input path's first segment after `context/`, never re-asked.
 
 The skill auto-routes to the correct template based on `context_type` in the input:
 
@@ -25,7 +25,7 @@ The skill auto-routes to the correct template based on `context_type` in the inp
 
 The skill is a **document generator**, not a discovery facilitator. It NEVER invents domain decisions, business-logic rules, success criteria, or user stories. Anything missing in the input goes verbatim into `## Open Questions` so a human can resolve it.
 
-Writes only: `$CONTEXT_ROOT/foundation/<project-slug>/prd.md` (or `prd-vN.md` beside it), the per-operator `.sdd.local.yml` and its `.gitignore` line.
+Writes only: `$CONTEXT_ROOT/foundation/<project-slug>/prd.md` (or `prd-vN.md` beside it when you choose to keep the old one), the per-operator `.sdd.local.yml` and its `.gitignore` line.
 
 This skill resolves its own `audience` per `../pm-help/references/plain-language.md` (`## Audience
 resolution`: read `$CONTEXT_ROOT/.sdd.local.yml`, else ask+write there; default `plain`) — it
@@ -82,9 +82,10 @@ Resolve the input path:
 
 This skill operates under the `CONTEXT_ROOT` handed to it (or the resolved input path it is given) — it does not run its own root discovery; `app:` may be absent for flat roots. **App resolution for legacy roots (inherited, not re-asked).** This skill RECEIVES its input. Infer `<app>` from the resolved input path's first segment after `context/` (`context/<app>/foundation/…`) and carry it through — never re-ask. (Legacy flat-layout inputs at `context/foundation/…` have no `<app>` segment; treat the repo as having no workspace layout and keep paths flat.)
 
-Record **`OUTPUT_DIR`** = the directory that contains the resolved input (e.g. `$CONTEXT_ROOT/foundation/<project-slug>`, legacy: `context/<app>/foundation/<project-slug>`). The generated PRD is written there, as a **sibling of the shape-notes** — never at a fixed top-level path. (For pasted raw notes with no file on disk, resolve `OUTPUT_DIR` from the handed-in `CONTEXT_ROOT` per the next bullet; for legacy roots, resolve `<app>` like an entry skill.)
+Record **`OUTPUT_DIR`**:
 
-For pasted raw notes with no file on disk, derive `OUTPUT_DIR` from the `CONTEXT_ROOT` this skill was handed. For legacy (app-partitioned) roots with no `CONTEXT_ROOT` yet resolved, fall back to resolving `<app>` the way an entry skill does:
+- **Input inside a project folder** — the resolved input's directory is `<root>/foundation/<project-slug>/` of a context root (a `.sdd.yml` beside `foundation/`) — `OUTPUT_DIR` = that directory (e.g. `$CONTEXT_ROOT/foundation/<project-slug>`, legacy: `context/<app>/foundation/<project-slug>`). The generated PRD is written there, as a **sibling of the shape-notes**.
+- **Input anywhere else** (raw notes such as `@raw-notes.md` in the repo root or a scratch folder, or pasted notes with no file on disk) — never write next to the input. Resolve `CONTEXT_ROOT` and the project per `../pm-help/references/context-resolution.md` (the handed-in `CONTEXT_ROOT` if there is one; otherwise discovery Steps 1-2), then ask for the project exactly as `/pm-shape` does: propose a short project name from the notes, derive the slug per the schema's "Output paths" rule, and confirm it ("I'll save this project's PRD under `$CONTEXT_ROOT/foundation/<proposed-slug>/`. Use this name?" with Rename as the alternative; when exactly one project folder already exists, offer it as the first option). Set `OUTPUT_DIR = $CONTEXT_ROOT/foundation/<project-slug>/`, creating the folder lazily. The raw notes file is left where it is. In plain mode the question is phrased without paths or slugs ("Which project is this for?"). For legacy (app-partitioned) roots with no `CONTEXT_ROOT` yet resolved, fall back to resolving `<app>` the way an entry skill does:
 
 ```bash
 # 1. cwd auto-detect: are we inside a workspace dir? (substitute the resolved <workspace-parent>)
@@ -333,7 +334,7 @@ If all checks pass, proceed to Step 4 with the validated content in hand.
 
 ### Step 4: Collision check
 
-Resolve all paths inside the input's project subfolder (`OUTPUT_DIR`, from Step 1):
+Resolve all paths inside the project subfolder (`OUTPUT_DIR`, from Step 1):
 
 ```bash
 test -f "<OUTPUT_DIR>/prd.md"
@@ -345,13 +346,13 @@ If the file exists, ask:
 
 Ask the user: "`<OUTPUT_DIR>/prd.md` already exists. How would you like to proceed?" with options:
 
-- "Save as prd-vN.md (Recommended)" (description: "Preserve history. The new PRD lands at the next available prd-vN.md slot in the same project subfolder. The unversioned prd.md is unchanged.")
-- "Overwrite prd.md" (description: "Replace the existing prd.md. The prior version is lost (unless you've committed it).")
+- "Overwrite prd.md (Recommended)" (description: "Replace the existing prd.md with the new PRD. The previous version stays in git history. Every later step reads prd.md only, so this keeps them pointed at the current PRD.")
+- "Save as prd-vN.md" (description: "Keep the old one beside it. The new PRD lands at the next available prd-vN.md slot in the same project folder; prd.md is unchanged, and the later review, metrics, roadmap and discovery steps read prd.md only.")
 - "Abort" (description: "Exit without writes. No collision resolution.")
 
-On "Save as prd-vN.md": pick `N` by scanning `<OUTPUT_DIR>/` for files matching `prd-v*.md`. Treat the unversioned `prd.md` as v1. The next slot is `N = (max existing N or 1) + 1`. Write the validated content to `<OUTPUT_DIR>/prd-v<N>.md` and bump the in-content `version:` frontmatter field to `<N>`. Proceed to Step 5.
-
 On "Overwrite prd.md": write the validated content to `<OUTPUT_DIR>/prd.md`. Keep `version: 1` (overwriting is a replacement, not a new version). Proceed to Step 5.
+
+On "Save as prd-vN.md": pick `N` by scanning `<OUTPUT_DIR>/` for files matching `prd-v*.md`. Treat the unversioned `prd.md` as v1. The next slot is `N = (max existing N or 1) + 1`. Write the validated content to `<OUTPUT_DIR>/prd-v<N>.md` and bump the in-content `version:` frontmatter field to `<N>`. Proceed to Step 5 with the **versioned-file hand-off** (below).
 
 On "Abort": STOP without writes.
 
@@ -388,6 +389,8 @@ parentheses. End with a plain "want me to keep going?".
 ```
 
 Then copy the next-step command to clipboard and announce (the PM's next step is the same in both modes; the developer hand-off differs):
+
+(If the PRD was saved as `prd-v<N>.md`, skip the copy and the `► Next:` block until the versioned-file hand-off below has been resolved.)
 
 ```bash
 echo -n "/pm-prd-review" | pbcopy 2>/dev/null || echo -n "/pm-prd-review" | clip.exe 2>/dev/null || echo -n "/pm-prd-review" | xclip -selection clipboard 2>/dev/null || true
@@ -432,6 +435,21 @@ If the input notes carried forward-looking concerns (tech-stack preferences, imp
 ```
 
 Skip the block entirely if the input didn't carry any of those.
+
+**Versioned-file hand-off (only when the PRD was saved as `prd-v<N>.md`).** The PM steps (`/pm-prd-review`, `/pm-metrics`, `/pm-roadmap`, `/pm-discover`) read `prd.md` only, so they would still look at the OLD PRD. Say so plainly, and do not name `/pm-prd-review` as the next step as if nothing were pending. Instead print this notice in place of the `► Next:` line, and ask:
+
+```
+  Note:   The new PRD is saved as prd-v<N>.md, but the next steps (review,
+          metrics, roadmap) read prd.md only. To continue with the new
+          version, prd.md has to be replaced by it.
+```
+
+Ask the user: "Replace prd.md with prd-v<N>.md now?" with options:
+
+- "Yes, replace it (Recommended)" (description: "Copy prd-v<N>.md over prd.md, keep `version: <N>` in it, leave prd-v<N>.md in place. The old prd.md stays in git history if it was committed.")
+- "No, keep both for now" (description: "Nothing else is written. The next steps will keep reading the old prd.md until you replace it.")
+
+On "Yes": write the content to `<OUTPUT_DIR>/prd.md` (this is the one extra write the skill may make after Step 4 and it needs this explicit yes), then give the normal hand-off to `/pm-prd-review`. On "No": give the hand-off without clipboard copy of `/pm-prd-review`, restating that those steps read `prd.md` only. Never hand a `prd-v<N>.md` file to `/pm-prd-review` (or any other step) silently. In plain mode the same message is given without file names beyond "the new version" and "the current write-up".
 
 STOP. Do not chain into another skill automatically.
 

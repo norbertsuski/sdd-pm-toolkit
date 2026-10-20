@@ -155,7 +155,7 @@ project. Then stop.
 **Next-move ladder** (first match wins; one recommendation, not a menu):
 
 1. No `prd.md` and no `shape-notes.md` → `/pm-discover` (or `/pm-research-synthesis` first if the user has raw research).
-2. `shape-notes.md` present, no `prd.md` → `/pm-prd` (or `/pm-shape` if shaping looks unfinished: its `checkpoint.current_phase` is below 8).
+2. `shape-notes.md` present, no `prd.md` → `/pm-prd @<path of that project's shape-notes.md>` (always with the path, so the PRD lands in this project's folder; or `/pm-shape` if shaping looks unfinished: its `checkpoint.current_phase` is below 8).
 3. `prd.md` is not reviewed (its `status` is not `reviewed` or `locked`, and the **latest** `prd-review-*.md` is absent or its `verdict` is not `APPROVED`) → `/pm-prd-review` (if a latest report exists with another verdict, say that review can be resumed).
 4. No `metrics.md` → `/pm-metrics`.
 5. No `roadmap.md` → `/pm-roadmap` (the tech-stack choice comes before it, as a developer's step; mention it only if `foundation/tech-stack.md` or `foundation/stack-assessment.md` is absent and the user has not skipped it).

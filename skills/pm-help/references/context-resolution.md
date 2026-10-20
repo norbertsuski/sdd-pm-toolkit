@@ -45,7 +45,7 @@ PM skills never create a legacy-layout artifact.
 
 **Who runs discovery.** Write-entry skills (`/pm-shape`) run this algorithm once, then hand the resolved
 `CONTEXT_ROOT` (or a fully-resolved artifact path derived from it) to downstream skills. Pure downstream
-skills (`/pm-prd`) never re-run discovery; they operate on the path they are handed. Standalone entry
+skills (`/pm-prd`) never re-run discovery for an input inside a `foundation/<slug>/` folder; they operate on the path they are handed. Given raw notes from anywhere else, `/pm-prd` resolves the root and project (Steps 1-3) and writes into the project folder, never next to the notes. Standalone entry
 points (`/pm-roadmap`, `/pm-map`, `/pm-help`, `/pm-status` and the other PM skills) are invoked directly
 without a live `CONTEXT_ROOT`, so they run discovery themselves, to locate an existing artifact or to
 enumerate roots for a status report. The "never re-run" rule applies only to a skill that was handed a

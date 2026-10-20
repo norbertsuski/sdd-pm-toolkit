@@ -147,8 +147,20 @@ return to Step 1 (root discovery runs again).
 2. **No research.** Ask for the idea in one line if it was not given. If it is **solution-shaped** — it says
    what to build ("build X", a feature or tool) and states no problem, user or pain — offer the framing check
    first: "Before we shape this, check that it solves a real problem? 1. Yes, check the problem first (Recommended)
-   2. No, shape it as it is 3. Not sure". On 1, invoke `/pm-frame` with the idea verbatim, then re-derive;
-   frame produces no PRD and does not change the stage. Then `/pm-shape <idea verbatim>` on a yes.
+   2. No, shape it as it is 3. Not sure". On 1, snapshot the existing `foundation/*/frame-*.md` paths, invoke
+   `/pm-frame` with the idea verbatim, then re-derive; frame produces no PRD and does not change the stage.
+   **Then hand the reframed problem on, not the original idea.** Find the `frame-*.md` that is new since the
+   snapshot (if several, the newest by the date in its name). If one exists, on a yes invoke
+   `/pm-shape @<that frame path>` — the frame brief is the seed, so the reframed problem reaches the shaping
+   conversation instead of being dropped. **Before invoking, tell the operator which project name to confirm**,
+   exactly as for research (item 3): `/pm-shape` proposes a name from the seed and asks "Use this name?"; the name
+   that keeps the framing next to the product is the frame's own folder name spoken as words
+   (`recipe-fridge` → "Recipe Fridge"), so say "When it asks you to confirm the project name, pick \"<Name>\" (or
+   choose Rename and type it), so your framing stays with the product." In plain mode say this in words with no
+   folder talk. If no new frame file exists (the framing stopped early or concluded without a brief), say so in one
+   line and, on a yes, fall back to `/pm-shape <idea verbatim>`. On 2 or 3 of the framing question (or when the
+   idea is not solution-shaped), invoke `/pm-shape <idea verbatim>` on a yes. Snapshot the existing
+   `foundation/*/shape-notes.md` paths before invoking `/pm-shape`; the post-shape check (item 4) uses it.
 3. **With research:** the seed is the research file. `/pm-shape` reads the whole file as its seed
    (`/pm-shape @<research path>`). **Before invoking, tell the operator which project name to confirm.**
    `/pm-shape` proposes a name from the seed at its project-name step and asks "Use this name?". The name that keeps the
@@ -157,18 +169,24 @@ return to Step 1 (root discovery runs again).
    In plain mode say this in words with no folder talk. A different name still works; the post-shape check below
    deals with it.
    Snapshot the existing `foundation/*/shape-notes.md` paths, then invoke.
-4. **After `/pm-shape` returns — slug-mismatch check.** Find the `shape-notes.md` that is new since the snapshot.
-   If it sits in `foundation/<slugB>/` while the research file sits in `foundation/<slugA>/research/` and
-   `<slugA>` ≠ `<slugB>`, the research and the shaping ended up in different folders. **Offer, never do silently**:
+4. **After `/pm-shape` returns — slug-mismatch check (research and frame brief).** Find the `shape-notes.md` that is
+   new since the snapshot. Companions to keep with it: the research folder `foundation/<slugA>/research/` (item 3)
+   and the frame brief `foundation/<slugA>/frame-<date>-<topic>.md` (item 2). If a companion sits in `foundation/<slugA>/`
+   while the new `shape-notes.md` sits in `foundation/<slugB>/` and `<slugA>` ≠ `<slugB>`, the companion and the
+   shaping ended up in different folders. **Offer, never do silently**:
    > Your research is in "<A>" but the product was saved as "<B>". Move the research next to it? 1. Yes, move it (Recommended) 2. Leave it where it is 3. Not sure
+   (for a frame brief: "Your framing is in "<A>" but the product was saved as "<B>". Move the framing next to it? …")
    Before building the command, check that **both** `<slugA>` and `<slugB>` (taken from on-disk folder names) match
    `^[a-z0-9]+(-[a-z0-9]+)*$`; if either does not, STOP, run nothing, and explain that a folder name is not a plain slug so
    the move must be done by hand.
-   On yes run `git mv foundation/<slugA>/research foundation/<slugB>/research` (paths under `$CONTEXT_ROOT`), tell the
-   operator it is staged but not committed, and leave the old folder alone; if it is empty now, mention that, do not delete it.
-   Fallbacks, each also offered, not assumed: the research folder is untracked (`git mv` fails) → offer plain `mv`;
-   `foundation/<slugB>/research` already exists → list the files that would move, move only non-colliding ones on a yes,
-   never overwrite. On 2 or 3 do nothing and say where the research stays. In plain mode say "move your notes next to the product" and
+   On yes run `git mv foundation/<slugA>/research foundation/<slugB>/research` for research, or
+   `git mv foundation/<slugA>/<frame file name> foundation/<slugB>/<frame file name>` for the frame file (paths under
+   `$CONTEXT_ROOT`; the frame file name must match `^frame-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+(-[0-9]+)?\.md$`, else the
+   same STOP), tell the operator it is staged but not committed, and leave the old folder alone; if it is empty now,
+   mention that, do not delete it.
+   Fallbacks, each also offered, not assumed: the source is untracked (`git mv` fails) → offer plain `mv`;
+   the target already exists (`foundation/<slugB>/research`, or a frame file of that name) → list the files that would move,
+   move only non-colliding ones on a yes, never overwrite. On 2 or 3 do nothing and say where it stays. In plain mode say "move your notes next to the product" ("move your framing notes next to the product") and
    do not show the command. Then continue to re-derivation (Step 2), which now reads the new project.
 
 **`shaping`** — "Resume the conversation? 1. Yes, pick it up where it stopped (Recommended) 2. Not now". On yes invoke
@@ -234,7 +252,7 @@ Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
 4. **`shaping` never goes to `/pm-prd`.** Only `checkpoint.current_phase: 8` makes a project `shaped`.
 5. **Nothing to install.** Every step it routes to ships in this plugin; never ask the operator to install, add or enable another plugin.
 6. **The stack step is the developer's, and skippable only by a human.** Never by policy, never silently; the skip lasts for this run only.
-7. **Name the project name beforehand, move research only on a yes.** The `git mv` of `research/` is offered after shape returns with a slug mismatch and happens only after "Yes"; never overwrite a file in the target folder.
+7. **Name the project name beforehand, move research and the frame brief only on a yes.** The shape step is always told which project name to confirm (for research and for a frame brief alike). The `git mv` of `research/` or of the frame file is offered after shape returns with a slug mismatch and happens only after "Yes"; never overwrite a file in the target folder.
 8. **Be honest about what is available.** `/pm-prd-review` not listed by the host → say so and skip with a note; never imply a step ran.
 9. **Formats from the contract.** Shape, PRD and stack-signal strings are used exactly as pinned in `../pm-help/references/artifact-contract.md`.
 10. **Own scope only.** Never touches `changes/**` or `archive/**`; writes nothing but `audience:` and the confirmed `research/` move.

@@ -23,9 +23,11 @@ runtime dependency on any other plugin.
 
 ## Non-goals (v0.1)
 
-- No changes to `sdd-toolkit`; no forked copies of its skills or references.
-- No PM skill writes `shape-notes.md`, `roadmap.md`, `changes/**` or `archive/**`.
-  `prd.md` is written only by `pm-prd-review` triage, with per-finding approval.
+- No changes to the upstream skills repository (D5). The six vendored skills (D2) are adapted copies recorded in
+  `VENDORED.md`, not forks that track upstream; compatibility is by file format only.
+- No PM skill writes `changes/**` or `archive/**` (a developer's workflow owns them). The vendored skills are the
+  sole writers of `shape-notes.md` (`pm-shape`), `prd.md` (`pm-prd`; `pm-prd-review` edits it only per approved
+  finding), `roadmap.md` (`pm-roadmap`) and `roadmap-map.md` (`pm-map`), per the ownership table below.
 - No two-way tracker sync: tracker status is never written back into `roadmap.md`.
 - No sending of messages (Slack post, email send) without an explicit yes naming the destination.
 - No time estimates outside `forecast.md`. `prioritization.md` may hold PM-supplied effort inputs used only for scoring, not as delivery estimates.
@@ -70,8 +72,8 @@ runtime dependency on any other plugin.
 ## Audience
 
 PM skills default to `audience: plain`. Resolution: read `$CONTEXT_ROOT/.sdd.local.yml`;
-absent → ask the sdd plain-mode question once, write the answer (ensuring `.gitignore` lists
-`.sdd.local.yml`), so sdd skills invoked later do not ask again. Plain mode = no jargon in
+absent → ask the plain-mode question once, write the answer (ensuring `.gitignore` lists
+`.sdd.local.yml`), so every PM skill invoked later reads it instead of asking again. Plain mode = no jargon in
 operator-facing text (rules in `pm-help/references/plain-language.md`); artifacts on disk are
 identical in both modes.
 

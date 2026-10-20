@@ -7,7 +7,7 @@ cannot run a skill inside a host. This checklist does. It has two parts:
 - **Part 2** — live-integration checks that could not be verified offline (need real connections).
 
 Expected outcomes cite the eval IDs in each skill's `references/eval-cases.md` (HL = pm-help, DS = pm-discover,
-PR = pm-prd-review, MT = pm-metrics, PZ = pm-prioritize, FC = pm-forecast, BS = pm-backlog-sync, ST = pm-status).
+IN = pm-init, MP = pm-map, PR = pm-prd-review, MT = pm-metrics, PZ = pm-prioritize, FC = pm-forecast, BS = pm-backlog-sync, ST = pm-status).
 Wording will vary; check the structure and the "Fail if" lines of those cases.
 
 ## Part 1 — End-to-end on the fixture
@@ -110,6 +110,36 @@ S-06 blocked); four archived changes; no `shape-notes.md`, no `tech-stack.md`.
   yes: `exports/<today>-status.md` and `exports/<today>-status.txt`.
 - **Check:** new file `context/foundation/recipe-fridge/status/<today>.md` with the seven headings.
 
+### Step 8 — `/pm-init` (twice: scaffold what is missing, then prove it is idempotent)
+
+The fixture context root already has `.sdd.yml` (`layout: flat`) but no `README.md`, `.gitignore` or `.sdd.local.yml`,
+so the first run is *not* a no-op; the second one is.
+
+- **Answer (first run):** if it asks for the target folder, answer the repository root's existing `context`; if it asks
+  the audience question, answer `plain` (skip if an earlier step already recorded it). Then run `/pm-init` a **second**
+  time, with the same answers.
+- **Expect (IN-02, IN-04 style):** first run: `.sdd.yml` is `present` and byte-identical (it already has `layout:`);
+  `context/README.md` is `created`; `context/.gitignore` (one line `.sdd.local.yml`) and `context/.sdd.local.yml`
+  (`audience: plain`) are `created` unless an earlier step already wrote them (then `present`); `foundation/`, `changes/`
+  and `archive/` are untouched and nothing new appears in them. Second run: **every entry `present`, nothing
+  rewritten, the audience question is not asked again, `.gitignore` gains no second `.sdd.local.yml` line**
+  (`.sdd.local.yml` is git-ignored, so it is absent from `git status` by design).
+- **Check:** after the first run save `git status --short -uall > "$SMOKE.after-init-1.txt"`; after the second run
+  `git status --short -uall | diff - "$SMOKE.after-init-1.txt"` must print nothing, and
+  `grep -c '^\.sdd\.local\.yml$' context/.gitignore` prints `1`.
+
+### Step 9 — `/pm-map recipe-fridge`
+
+- **Answer:** confirm the project when asked (if it asks at all). Nothing else to answer.
+- **Expect (MP-01, MP-05):** the skill takes the renderer from the **installed plugin** (the base directory the host
+  reports for the skill, or `$CLAUDE_PLUGIN_ROOT/skills/pm-map/`; here inside `$PM`), runs
+  `render-roadmap-map.sh` on `context/foundation/recipe-fridge/roadmap.md`, and reports
+  `recipe-fridge · 7 slices — 4 done · 1 ready · 2 blocked · ★ S-02` (in plain mode in words: "4 pieces are finished,
+  1 can start now, 2 are waiting"). `roadmap-map.md` has a `graph LR` Mermaid block with **7 nodes** (F-01, S-01..S-06),
+  S-02 starred, edges F-01 → S-01 → S-02. It never draws the graph by hand and never edits `roadmap.md`.
+- **Check:** new file `context/foundation/recipe-fridge/roadmap-map.md`; `roadmap.md` byte-identical
+  (`git diff --stat -- context/foundation/recipe-fridge/roadmap.md` is empty).
+
 ### Final check — nothing the PM skills must not touch changed
 
 From `$SMOKE` (outside Claude, or with `!` inside it):
@@ -131,7 +161,7 @@ git status --short -uall                          # expect: exactly the files in
 
 Check 3 must list **exactly** the new files from this table and nothing else (all show as `??`):
 
-| Step | File under `context/foundation/recipe-fridge/` | Required? |
+| Step | File under `context/foundation/recipe-fridge/` (unless a full path is given) | Required? |
 |---|---|---|
 | 2 | `prd-review-<today>.md` | yes |
 | 3 | `metrics.md` | yes |
@@ -139,11 +169,13 @@ Check 3 must list **exactly** the new files from this table and nothing else (al
 | 5 | `forecast.md` | yes |
 | 6 | `exports/<today>-backlog.csv` | yes (the CSV fallback) |
 | 7 | `status/<today>.md` | yes |
+| 9 | `roadmap-map.md` | yes (the map `/pm-map` draws; `roadmap.md` itself stays unchanged) |
 | 7 | `exports/<today>-status.md` and `exports/<today>-status.txt` | only if you said yes to the status export (ST-06) |
 | any | `pm-config.yml` | only if a skill asked and you confirmed it |
-| any | `context/.sdd.local.yml` (audience) and a `.gitignore` entry for it | only if a skill asked the audience question |
+| 8 | `context/README.md` (outside `foundation/`) | yes (`/pm-init` scaffolds it; the fixture has none) |
+| 8 | `context/.gitignore` with the one line `.sdd.local.yml` | yes (`/pm-init` guarantees it; written by whichever skill asked the audience question first). `context/.sdd.local.yml` itself exists but is git-ignored, so it never shows in `git status`; confirm it with `cat context/.sdd.local.yml` (`audience: plain`). |
 
-So a correct run shows the 6 required files, plus any of the optional ones you accepted. A file anywhere else
+So a correct run shows the 7 required files under `recipe-fridge/` (including `roadmap-map.md`) plus the 2 required context-level files (`context/README.md`, `context/.gitignore`), and any of the optional ones you accepted. A file anywhere else
 (for example a new `shape-notes.md`, a new folder under `changes/` or `archive/`, a `tracker-map.md`) is a failure.
 
 **Fail** if check 1 or 2 prints anything, if check 3 lists a file not in the table, or if any change shows for

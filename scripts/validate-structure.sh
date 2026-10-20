@@ -296,9 +296,13 @@ if [[ -f "$PD/SKILL.md" ]]; then
            'git mv' 'checkpoint.current_phase' 'stack-pending' 'verdict: APPROVED'; do
     grep -qF -- "$s" "$PD/SKILL.md" || err "pm-discover/SKILL.md must mention '$s'"
   done
+  # frame -> shape route: the frame brief path (not the bare idea) is handed to shape
+  for s in '/pm-shape @<that frame path>' 'frame-*.md' 'foundation/<slugA>/<frame file name>'; do
+    grep -qF -- "$s" "$PD/SKILL.md" || err "pm-discover/SKILL.md frame->shape route must mention '$s'"
+  done
 fi
 if [[ -f "$PD/references/eval-cases.md" ]]; then
-  for id in DS-01 DS-02 DS-03 DS-04 DS-05 DS-06 DS-07 DS-08; do
+  for id in DS-01 DS-02 DS-03 DS-04 DS-05 DS-06 DS-07 DS-08 DS-09; do
     grep -qF "$id" "$PD/references/eval-cases.md" || err "pm-discover eval-cases.md missing $id"
   done
 fi
@@ -665,6 +669,17 @@ for pair in 'shape-notes.md:pm-shape' 'prd.md:pm-prd'; do
 done
 grep -qF '/pm-shape' skills/pm-help/SKILL.md && grep -qF '/pm-prd' skills/pm-help/SKILL.md \
   || err "pm-help/SKILL.md Branch A flow must name /pm-shape and /pm-prd"
+# pm-prd: collision default keeps prd.md current; a versioned save is never handed to the review silently; raw notes resolve a project
+if [[ -f skills/pm-prd/SKILL.md ]]; then
+  for s in 'Overwrite prd.md (Recommended)' 'Replace prd.md with prd-v<N>.md now?' 'read `prd.md` only' \
+           'Input anywhere else' 'context-resolution.md'; do
+    grep -qF -- "$s" skills/pm-prd/SKILL.md || err "pm-prd/SKILL.md must mention '$s'"
+  done
+  grep -qF 'Save as prd-vN.md (Recommended)' skills/pm-prd/SKILL.md \
+    && err "pm-prd/SKILL.md must not recommend 'Save as prd-vN.md' (later steps read prd.md only)"
+fi
+grep -qE '^\| PD-07 \|' skills/pm-prd/references/eval-cases.md 2>/dev/null || err "pm-prd eval-cases.md missing PD-07 (raw notes outside a project folder)"
+grep -qF '/pm-prd @<path' skills/pm-help/SKILL.md || err "pm-help/SKILL.md next-move ladder must recommend /pm-prd with the shape-notes path"
 ok "vendored pm-init, pm-shape, pm-prd, prd-schema, plain-language headings, VENDORED.md and eval ids checked"
 
 # --- 24. vendored pm-roadmap / pm-frame / pm-map: files, no upstream refs, scripts, render, eval ids, registry
@@ -755,15 +770,29 @@ ok "vendored pm-roadmap, pm-frame, pm-map, map scripts, render test, eval ids an
 # Scans every tracked file except VENDORED.md, scripts/check-upstream.sh and docs/superpowers/**.
 # Allowed tokens are deleted first: the two own names and the Backlog Handoff column-header literal.
 refs=0
+# File list: prefer git; on an image without git (or outside a work tree) fall back to find.
+FILES=$(git ls-files 2>/dev/null) || FILES=""
+if [[ -z "$FILES" ]]; then
+  FILES=$(find . -type f -not -path './.git/*' -not -path './.superpowers/*' | sed 's|^\./||')
+fi
+if [[ -z "$FILES" ]]; then
+  err "no-reference scan found no files to scan (git ls-files and find both returned nothing)"
+fi
+BARE_RE="(^|[^a-z.])${_s}-[a-z]"   # bare <upstream>-<name> mentions without a slash
+nscanned=0
 while IFS= read -r f; do
-  case "$f" in VENDORED.md|scripts/check-upstream.sh|docs/superpowers/*) continue ;; esac
+  [[ -n "$f" ]] || continue
+  case "$f" in VENDORED.md|scripts/check-upstream.sh|docs/superpowers/*|.superpowers/*|.git/*) continue ;; esac
   [[ -f "$f" ]] || continue
-  found=$(sed -e 's/sdd-pm-toolkit//g' -e 's/sdd-pm-skills//g' -e "s|${READY_LIT}||g" "$f" | grep -nE "$UPSTREAM_RE")
+  nscanned=$((nscanned + 1))
+  cleaned=$(sed -e 's/sdd-pm-toolkit//g' -e 's/sdd-pm-skills//g' -e "s|${READY_LIT}||g" "$f")
+  found=$(printf '%s\n' "$cleaned" | grep -nE "$UPSTREAM_RE|$BARE_RE")
   if [[ -n "$found" ]]; then
     echo "$found" | sed "s|^|$f:|"
     refs=1
   fi
-done < <(git ls-files)
+done <<< "$FILES"
+[[ $nscanned -gt 0 ]] || err "no-reference scan examined zero files"
 [[ $refs -eq 0 ]] || err "tracked files reference the upstream repo/plugin or a command of it (lines above)"
 # no "required skills" / install-the-other-plugin text in any skill
 if grep -rniE 'required skills|install sdd' skills/; then
