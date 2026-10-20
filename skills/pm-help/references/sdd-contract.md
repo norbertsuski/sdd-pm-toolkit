@@ -211,6 +211,40 @@ Written only by sdd change skills (`/sdd-new`, `/sdd-plan`, `/sdd-implement`, `/
 - `verified_at:`
 <!-- change-keys:end -->
 
+## Shape checkpoint contract
+
+Path: `$CONTEXT_ROOT/foundation/<project-slug>/shape-notes.md`, written only by `/sdd-shape`. Its
+frontmatter carries a `checkpoint:` block that lets a session resume from disk; the PM toolkit reads
+it (never writes it) to tell a shaping session in progress from a finished one.
+
+<!-- shape-checkpoint:start -->
+- `checkpoint:`
+- `current_phase:`
+- `phases_completed:`
+- `quality_check_status:`
+<!-- shape-checkpoint:end -->
+
+`checkpoint.current_phase` is an integer: `1`..`6` are the discovery phases (shaping in progress), `7` is
+the closing cross-check (still in progress), `8` is finalized and ready for `/sdd-prd`. So "shaping" means
+`current_phase` below 8 and "shaped" means exactly 8. `quality_check_status` is `pending | warned | accepted`;
+at phase 8 it is `warned` or `accepted`. A missing or unparseable `checkpoint:` block is not guessed: treat
+the session as in progress and let `/sdd-shape` decide where to resume.
+
+## Stack signals
+
+The stack step sits between the PRD and `/sdd-roadmap`. `sdd-skills` detects that it has happened by file
+presence only, and the files are **root-level** (shared by every project under the same `CONTEXT_ROOT`,
+not per project): `foundation/tech-stack.md` for a greenfield PRD (written by `/sdd-tech-stack-selector`),
+`foundation/stack-assessment.md` for a brownfield PRD (written by `/sdd-stack-assess`, usually followed by
+`/sdd-health-check`). Paths are relative to `CONTEXT_ROOT`.
+
+<!-- stack-signals:start -->
+- `foundation/tech-stack.md`
+- `foundation/stack-assessment.md`
+<!-- stack-signals:end -->
+
+A person may skip this step and go straight to `/sdd-roadmap`; the skill never skips it by policy.
+
 ## Contract check procedure
 
 Every PM skill that parses `prd.md` or `roadmap.md` runs this before reading anything else from it:

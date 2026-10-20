@@ -48,8 +48,8 @@ from `$CONTEXT_ROOT/.sdd.local.yml` when a root is resolved (Branch C); otherwis
 follows `references/plain-language.md`: say what each step does first, show the command once in
 parentheses, and keep the output free of schema talk.
 
-Installed in this plugin (2): `pm-help`, `pm-research-synthesis`. Planned for this release, not installed yet unless the host lists them:
-`pm-discover`, `pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-forecast`,
+Installed in this plugin (3): `pm-help`, `pm-research-synthesis`, `pm-discover`. Planned for this release, not installed yet unless the host lists them:
+`pm-prd-review`, `pm-metrics`, `pm-prioritize`, `pm-forecast`,
 `pm-backlog-sync`, `pm-status`. Before recommending any `/pm-*` command, confirm it is in the host's
 available skills; if it is not, still name the step but say plainly that this command is not installed in
 this project, and never imply it will run.

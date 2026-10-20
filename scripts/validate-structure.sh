@@ -253,6 +253,34 @@ if [[ -f "$RS/references/eval-cases.md" ]]; then
 fi
 ok "pm-research-synthesis files, headings and eval ids checked"
 
+# --- 15. pm-discover: files, routed sdd skills, git mv, stack gate, eval ids, contract blocks
+PD=skills/pm-discover
+for f in SKILL.md references/eval-cases.md; do
+  [[ -f "$PD/$f" ]] || err "missing $PD/$f"
+done
+if [[ -f "$PD/SKILL.md" ]]; then
+  for s in '/sdd-init' '/sdd-frame' '/sdd-shape' '/sdd-prd' '/pm-prd-review' '/sdd-roadmap' \
+           '/sdd-tech-stack-selector' '/sdd-stack-assess' '/sdd-health-check' \
+           'git mv' 'checkpoint.current_phase' 'stack-pending'; do
+    grep -qF -- "$s" "$PD/SKILL.md" || err "pm-discover/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PD/references/eval-cases.md" ]]; then
+  for id in DS-01 DS-02 DS-03 DS-04 DS-05 DS-06 DS-07; do
+    grep -qF "$id" "$PD/references/eval-cases.md" || err "pm-discover eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$CONTRACT" ]]; then
+  for b in shape-checkpoint:4 stack-signals:2; do
+    bname=${b%%:*}; bmin=${b##*:}
+    grep -qxF "<!-- $bname:start -->" "$CONTRACT" && grep -qxF "<!-- $bname:end -->" "$CONTRACT" \
+      || err "sdd-contract.md missing markers for block '$bname'"
+    [[ "$(contract_block "$bname" | wc -l | tr -d ' ')" -ge "$bmin" ]] \
+      || err "sdd-contract.md block '$bname' has fewer than $bmin entries"
+  done
+fi
+ok "pm-discover files, routed skills, stack gate, eval ids and contract blocks checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
