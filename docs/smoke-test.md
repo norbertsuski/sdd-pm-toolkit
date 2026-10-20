@@ -125,28 +125,39 @@ S-06 blocked); four archived changes; no `shape-notes.md`, no `tech-stack.md`.
 From `$SMOKE` (outside Claude, or with `!` inside it):
 
 ```bash
+# 1. Tracked files unchanged (catches edits to existing files)
 git diff --stat                                   # expect: empty
-git status --short                                # expect: only new (untracked) files
-git diff --stat -- \
-  context/foundation/recipe-fridge/roadmap.md \
-  context/foundation/recipe-fridge/shape-notes.md \
-  context/changes context/archive                 # expect: empty
 git diff --quiet && echo "tracked files unchanged"
+
+# 2. Protected paths untouched, including NEW (untracked) files that diff cannot see
+git status --short -uall -- \
+  context/changes context/archive \
+  context/foundation/recipe-fridge/roadmap.md \
+  '*shape-notes.md'                               # expect: empty
+
+# 3. Everything new is an expected artifact
+git status --short -uall                          # expect: exactly the files in the table below, nothing else
 ```
 
-Expected new PM artifacts (6, plus an optional `pm-config.yml` and the `.sdd.local.yml` audience file if the skills asked):
+Check 3 must list **exactly** the new files from this table and nothing else (all show as `??`):
 
-| Step | File under `context/foundation/recipe-fridge/` |
-|---|---|
-| 2 | `prd-review-<today>.md` |
-| 3 | `metrics.md` |
-| 4 | `prioritization.md` |
-| 5 | `forecast.md` |
-| 6 | `exports/<today>-backlog.csv` |
-| 7 | `status/<today>.md` |
+| Step | File under `context/foundation/recipe-fridge/` | Required? |
+|---|---|---|
+| 2 | `prd-review-<today>.md` | yes |
+| 3 | `metrics.md` | yes |
+| 4 | `prioritization.md` | yes |
+| 5 | `forecast.md` | yes |
+| 6 | `exports/<today>-backlog.csv` | yes (the CSV fallback) |
+| 7 | `status/<today>.md` | yes |
+| 7 | `exports/<today>-status.md` and `exports/<today>-status.txt` | only if you said yes to the status export (ST-06) |
+| any | `pm-config.yml` | only if a skill asked and you confirmed it |
+| any | `context/.sdd.local.yml` (audience) and a `.gitignore` entry for it | only if a skill asked the audience question |
 
-**Fail** if `git diff --stat` shows any change to `roadmap.md`, `shape-notes.md` (absent in this fixture, so it must
-not appear at all), `changes/` or `archive/`, or any change to `prd.md` (every finding was dismissed).
+So a correct run shows the 6 required files, plus any of the optional ones you accepted. A file anywhere else
+(for example a new `shape-notes.md`, a new folder under `changes/` or `archive/`, a `tracker-map.md`) is a failure.
+
+**Fail** if check 1 or 2 prints anything, if check 3 lists a file not in the table, or if any change shows for
+`roadmap.md`, `shape-notes.md`, `changes/`, `archive/` or `prd.md` (every finding was dismissed).
 
 Clean up: `rm -rf "$SMOKE"`.
 
