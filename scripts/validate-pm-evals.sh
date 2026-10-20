@@ -179,21 +179,54 @@ assert_eq ST-triage-underscore-spelling-is-not-sdd no "$(change_needs_triage imp
 assert_eq ST-triage-not-impl-reviewed no "$(change_needs_triage implementing REJECTED 0)"
 
 # --- ST: forecast freshness script embedded in SKILL.md (fresh = dated 0..7 days before today) ---
+# The script takes the PATH of forecast.md and today; it reads updated (else created) from the frontmatter itself,
+# so no text from the file is ever on a command line. The tests write real files and pass only their path.
 ST_AGE_PY=$(embedded_script "$ST_SKILL" pm-status:age-script)
 assert_eq ST-age-script-found yes "$([[ -n "$ST_AGE_PY" ]] && echo yes || echo no)"
 if [[ -n "$ST_AGE_PY" ]]; then
-  age() { python3 -c "$ST_AGE_PY" "$1" "$2"; }
-  assert_eq ST-age-same-day "fresh 0" "$(age 2026-10-20 2026-10-20)"
-  assert_eq ST-age-seven-days "fresh 7" "$(age 2026-10-13 2026-10-20)"
-  assert_eq ST-age-eight-days "stale 8" "$(age 2026-10-12 2026-10-20)"
-  assert_eq ST-age-ten-days "stale 10" "$(age 2026-10-10 2026-10-20)"
-  assert_eq ST-age-future-is-stale "stale -1" "$(age 2026-10-21 2026-10-20)"
-  assert_eq ST-age-bad-format INVALID "$(age 2026-10-1 2026-10-20)"
-  assert_eq ST-age-impossible-date INVALID "$(age 2026-13-40 2026-10-20)"
-  assert_eq ST-age-trailing-newline INVALID "$(age "$(printf '2026-10-13\n')x" 2026-10-20)"
   st_tmp=$(mktemp -d)
-  assert_eq ST-age-injection-shaped INVALID "$(age "2026-10-13;touch $st_tmp/pwned" 2026-10-20)"
-  assert_eq ST-age-injection-not-executed no "$([[ -e "$st_tmp/pwned" ]] && echo yes || echo no)"
+  age() { python3 -c "$ST_AGE_PY" "$1" "$2"; }
+  # fc <name> <frontmatter lines...>: write $st_tmp/<name>.md as a forecast.md with that frontmatter
+  fc() { local n="$1"; shift; { printf -- '---\n'; printf '%s\n' "$@"; printf -- '---\n\n# Forecast\n'; } > "$st_tmp/$n.md"; }
+  fc same 'project: x' 'created: 2026-10-20' 'updated: 2026-10-20'
+  fc seven 'updated: 2026-10-13'
+  fc eight 'updated: 2026-10-12'
+  fc ten 'created: 2026-10-10' 'updated: 2026-10-10'
+  fc future 'updated: 2026-10-21'
+  fc created-only 'created: 2026-10-14'
+  fc updated-wins 'created: 2026-09-01' 'updated: 2026-10-19'
+  fc quoted 'updated: "2026-10-18"'
+  fc bad-format 'updated: 2026-10-1'
+  fc bad-date 'updated: 2026-13-40'
+  fc no-date 'project: x'
+  fc updated-bad-created-good 'created: 2026-10-19' 'updated: soon'
+  assert_eq ST-age-same-day "fresh 0" "$(age "$st_tmp/same.md" 2026-10-20)"
+  assert_eq ST-age-seven-days "fresh 7" "$(age "$st_tmp/seven.md" 2026-10-20)"
+  assert_eq ST-age-eight-days "stale 8" "$(age "$st_tmp/eight.md" 2026-10-20)"
+  assert_eq ST-age-ten-days "stale 10" "$(age "$st_tmp/ten.md" 2026-10-20)"
+  assert_eq ST-age-future-is-stale "stale -1" "$(age "$st_tmp/future.md" 2026-10-20)"
+  assert_eq ST-age-created-fallback "fresh 6" "$(age "$st_tmp/created-only.md" 2026-10-20)"
+  assert_eq ST-age-updated-beats-created "fresh 1" "$(age "$st_tmp/updated-wins.md" 2026-10-20)"
+  assert_eq ST-age-quoted-value "fresh 2" "$(age "$st_tmp/quoted.md" 2026-10-20)"
+  assert_eq ST-age-bad-format INVALID "$(age "$st_tmp/bad-format.md" 2026-10-20)"
+  assert_eq ST-age-impossible-date INVALID "$(age "$st_tmp/bad-date.md" 2026-10-20)"
+  assert_eq ST-age-no-date INVALID "$(age "$st_tmp/no-date.md" 2026-10-20)"
+  assert_eq ST-age-unreadable-updated-is-invalid INVALID "$(age "$st_tmp/updated-bad-created-good.md" 2026-10-20)"
+  assert_eq ST-age-missing-file INVALID "$(age "$st_tmp/nope.md" 2026-10-20)"
+  assert_eq ST-age-bad-today INVALID "$(age "$st_tmp/same.md" 2026-10-2)"
+  printf -- '---\nupdated: 2026-10-13\n---\n' | sed 's/$/\r/' > "$st_tmp/crlf.md"
+  assert_eq ST-age-crlf-file "fresh 7" "$(age "$st_tmp/crlf.md" 2026-10-20)"
+  printf -- '---\nupdated: 2026-10-13\n---\n' > "$st_tmp/nl-after.md"
+  assert_eq ST-age-date-then-newline-ok "fresh 7" "$(age "$st_tmp/nl-after.md" 2026-10-20)"
+  # hostile file text: the date value holds shell syntax; it is only ever read inside Python, never on a command line
+  printf -- '---\nupdated: 2026-10-13$(touch %s/pwned)\n---\n' "$st_tmp" > "$st_tmp/hostile1.md"
+  printf -- '---\nupdated: 2026-10-13`touch %s/pwned2`\n---\n' "$st_tmp" > "$st_tmp/hostile2.md"
+  printf -- '---\nupdated: x"; touch %s/pwned3; echo "\n---\n' "$st_tmp" > "$st_tmp/hostile3.md"
+  printf -- '---\nupdated: 2026-10-13\\n2026-10-13\n---\n' > "$st_tmp/hostile4.md"
+  for h in hostile1 hostile2 hostile3 hostile4; do
+    assert_eq "ST-age-$h" INVALID "$(age "$st_tmp/$h.md" 2026-10-20)"
+  done
+  assert_eq ST-age-hostile-not-executed no "$([[ -e "$st_tmp/pwned" || -e "$st_tmp/pwned2" || -e "$st_tmp/pwned3" ]] && echo yes || echo no)"
   rm -rf "$st_tmp"
 fi
 

@@ -179,24 +179,44 @@ inputs (decides the open question, triages the review, re-runs `/pm-forecast`); 
 ### Step 6 — The forecast
 
 1. No `forecast.md` → "none" (the `## Forecast` row in `references/status-format.md`; suggest `/pm-forecast`).
-2. Otherwise take its date: `updated` from the frontmatter (else `created`; a forecast overwrite keeps `created`, so `updated` is the age
-   of the numbers). Compute its age with this command (never mentally); the dates are validated by the script and only they are put on the
-   command line:
+2. Otherwise get its age with this command (never mentally). The script reads `updated` from the frontmatter of `forecast.md` itself
+   (else `created`; a forecast overwrite keeps `created`, so `updated` is the age of the numbers) and validates the date inside Python.
+   **Only two things go on the command line: the path of `forecast.md`, which this skill builds from `CONTEXT_ROOT` and the validated
+   slug, and today's date from `date +%Y-%m-%d`.** Text from the file (the date value included) is never put on a command line, so a
+   hostile value cannot be expanded by the shell.
 
 <!-- pm-status:age-script -->
 ```bash
 python3 -c 'import datetime,re,sys
-a,b=sys.argv[1:3]
-ok=all(re.fullmatch(r"\d{4}-\d{2}-\d{2}",x) for x in (a,b))
 try:
-    n=(datetime.date.fromisoformat(b)-datetime.date.fromisoformat(a)).days if ok else None
-except ValueError:
-    n=None
-print("INVALID" if n is None else ("fresh " if 0<=n<=7 else "stale ")+str(n))' "<forecast date>" "<today>"
+    t=open(sys.argv[1],encoding="utf-8").read().split("\n")
+except (OSError,UnicodeDecodeError):
+    t=[]
+fm=[]
+if t and t[0].strip()=="---":
+    for l in t[1:]:
+        if l.strip()=="---":
+            break
+        fm.append(l)
+d={}
+for l in fm:
+    m=re.fullmatch(r"(updated|created):\s*(.*?)\s*",l)
+    if m:
+        d.setdefault(m.group(1),m.group(2).strip("\""))
+a=d["updated"] if "updated" in d else d.get("created","")
+b=sys.argv[2]
+pat=r"\d{4}-\d{2}-\d{2}"
+n=None
+if re.fullmatch(pat,a) and re.fullmatch(pat,b):
+    try:
+        n=(datetime.date.fromisoformat(b)-datetime.date.fromisoformat(a)).days
+    except ValueError:
+        pass
+print("INVALID" if n is None else ("fresh " if 0<=n<=7 else "stale ")+str(n))' "<forecast.md path>" "<today>"
 ```
 
    `fresh <n>` (0 to 7 days old) → usable. `stale <n>` (older, or dated in the future) → **not used**: `deadline_risk=none`, no dates, no
-   verdict from it; say how old it is and suggest `/pm-forecast`. `INVALID` → not used, say the date is unreadable.
+   verdict from it; say how old it is and suggest `/pm-forecast`. `INVALID` (no readable `updated` / `created` date, or no file) → not used, say the date is unreadable.
 3. A usable forecast is read from the file, never recomputed: the `deadline_risk` frontmatter key (if the key is missing the file predates
    it: not used, say so), the three-row table under `## Forecast` and the block under `## Deadline Check`, copied verbatim. A file whose
    `## Forecast` says "No forecast yet" is `insufficient-history`: no dates, `deadline_risk=none`.
