@@ -355,6 +355,40 @@ if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
 fi
 ok "pm-metrics files, format headings, TBD rule, eval ids and contract block checked"
 
+# --- 18. pm-prioritize: files, formula strings, python3 -c, headings, eval ids, artifact row
+PP=skills/pm-prioritize
+for f in SKILL.md references/frameworks.md references/eval-cases.md; do
+  [[ -f "$PP/$f" ]] || err "missing $PP/$f"
+done
+if [[ -f "$PP/references/frameworks.md" ]]; then
+  grep -qF 'reach × impact × (confidence/100) / effort' "$PP/references/frameworks.md" \
+    || err "frameworks.md must contain the RICE formula 'reach × impact × (confidence/100) / effort'"
+  grep -qF 'impact × confidence × ease' "$PP/references/frameworks.md" \
+    || err "frameworks.md must contain the ICE formula 'impact × confidence × ease'"
+  for h in "## Method" "## Scores" "## Dependency Conflicts" "## Proposed Sequence Changes" "## Open Questions"; do
+    grep -qxF -- "$h" "$PP/references/frameworks.md" || err "frameworks.md missing heading: $h"
+  done
+  for s in '0.25, 0.5, 1, 2, 3' '50, 80, 100' 'Must' 'Won'"'"'t' 'person-weeks'; do
+    grep -qF -- "$s" "$PP/references/frameworks.md" || err "frameworks.md must mention '$s'"
+  done
+fi
+if [[ -f "$PP/SKILL.md" ]]; then
+  for s in 'python3 -c' 'CONTRACT MISMATCH' 'Contract check procedure' '## Dependency Conflicts' \
+           '## Proposed Sequence Changes' 'MoSCoW' 'Overwrite' '/sdd-roadmap' 'person-weeks' 'update the plan with these priorities'; do
+    grep -qF -- "$s" "$PP/SKILL.md" || err "pm-prioritize/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PP/references/eval-cases.md" ]]; then
+  for id in PZ-01 PZ-02 PZ-03 PZ-04 PZ-05; do
+    grep -qF "$id" "$PP/references/eval-cases.md" || err "pm-prioritize eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F '`prioritization.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'method' \
+    || err "pm-artifacts.md prioritization.md row must name the method frontmatter key"
+fi
+ok "pm-prioritize files, formulas, python3 -c, headings and eval ids checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
