@@ -7,7 +7,7 @@ Ships one plugin: **sdd-pm-skills** (15 `pm-*` skills). It is self-contained: no
 ## Install
 
 ```
-/plugin marketplace add https://gitlab.com/norbert.suski/sdd-pm-toolkit.git
+/plugin marketplace add https://github.com/norbertsuski/sdd-pm-toolkit.git
 /plugin install sdd-pm-skills@sdd-pm-toolkit
 ```
 
