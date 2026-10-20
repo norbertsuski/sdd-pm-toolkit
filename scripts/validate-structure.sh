@@ -110,6 +110,127 @@ ok "relative .md links in SKILL.md files resolve"
   && ok "GitLab CI runs the structural validator" \
   || err ".gitlab-ci.yml does not run bash scripts/validate-structure.sh"
 
+# --- 8. pm-help shared references exist ---------------------------------
+HELP_REFS=skills/pm-help/references
+for f in context-resolution sdd-contract pm-artifacts integrations plain-language eval-cases; do
+  [[ -f "$HELP_REFS/$f.md" ]] || err "missing shared reference: $HELP_REFS/$f.md"
+done
+[[ -f skills/pm-help/SKILL.md ]] || err "missing skills/pm-help/SKILL.md"
+ok "pm-help shared reference files checked"
+
+# --- 9. sdd-contract.md: pinned version, headings, parseable blocks -----
+CONTRACT="$HELP_REFS/sdd-contract.md"
+# contract_block <name>: strings between <!-- name:start --> and <!-- name:end -->.
+# Extraction rule (shared with scripts/check-sdd-contract.sh): one entry per line
+# in the form  - `<string>` ; the string is everything between the first "- `"
+# and the LAST backtick on the line (so strings may contain backticks).
+contract_block() {
+  awk -v n="$1" '
+    $0 == "<!-- " n ":start -->" {on=1; next}
+    $0 == "<!-- " n ":end -->"   {on=0}
+    on' "$CONTRACT" | sed -n -E 's/^- `(.*)`[[:space:]]*$/\1/p'
+}
+if [[ -f "$CONTRACT" ]]; then
+  grep -qF "sdd_skills_version: 0.4.1" "$CONTRACT" \
+    || err "sdd-contract.md must contain 'sdd_skills_version: 0.4.1'"
+  for h in "## Version" "## Install block" "## Required skills" "## PRD contract" \
+           "## Roadmap contract" "## Change contract" "## Contract check procedure"; do
+    grep -qxF -- "$h" "$CONTRACT" || err "sdd-contract.md missing heading: $h"
+  done
+  for b in prd-greenfield:10 prd-brownfield:11 roadmap:10 roadmap-columns:1 change-keys:1 prd-frontmatter:1; do
+    bname=${b%%:*}; bmin=${b##*:}
+    bn=$(contract_block "$bname" | wc -l | tr -d ' ')
+    grep -qxF "<!-- $bname:start -->" "$CONTRACT" && grep -qxF "<!-- $bname:end -->" "$CONTRACT" \
+      || err "sdd-contract.md missing markers for block '$bname'"
+    [[ "$bn" -ge "$bmin" ]] || err "sdd-contract.md block '$bname' has $bn entries (expected >= $bmin)"
+  done
+  [[ "$(contract_block prd-greenfield | wc -l | tr -d ' ')" -eq 10 ]] || err "prd-greenfield block must have exactly 10 headings"
+  [[ "$(contract_block prd-brownfield | wc -l | tr -d ' ')" -eq 11 ]] || err "prd-brownfield block must have exactly 11 headings"
+  ok "sdd-contract.md pinned to 0.4.1 with parseable blocks"
+else
+  err "sdd-contract.md missing ($CONTRACT)"
+fi
+
+# --- 10. pm-help/SKILL.md: installed count, mentions every other skill --
+if [[ -f skills/pm-help/SKILL.md ]]; then
+  grep -qF "Installed in this plugin (${count})" skills/pm-help/SKILL.md \
+    || err "pm-help/SKILL.md must contain 'Installed in this plugin (${count})'"
+  for dir in skills/pm-*/; do
+    name=$(basename "$dir")
+    [[ "$name" == "pm-help" ]] && continue
+    grep -qF "\`$name\`" skills/pm-help/SKILL.md \
+      || err "pm-help/SKILL.md does not mention \`$name\`"
+  done
+  ok "pm-help lists the installed count and every other skill"
+fi
+
+# --- 11. shared reference structure (integrations, artifacts) -----------
+if [[ -f "$HELP_REFS/integrations.md" ]]; then
+  for h in "## Adapter detection" "## pm-config.yml" "## Write protocol" "## Messages" "## Export fallback"; do
+    grep -qxF -- "$h" "$HELP_REFS/integrations.md" || err "integrations.md missing heading: $h"
+  done
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  for p in 'research/*.md' 'prd-review-<date>.md' 'metrics.md' 'prioritization.md' 'forecast.md' \
+           'tracker-map.md' 'status/<date>.md' 'pm-config.yml' 'exports/*'; do
+    grep -qF -- "$p" "$HELP_REFS/pm-artifacts.md" || err "pm-artifacts.md has no row for $p"
+  done
+fi
+ok "integrations.md headings and pm-artifacts.md rows checked"
+
+# --- 12. fixture project conforms to the sdd contract -------------------
+FIX=tests/fixtures/flat-root/context
+FPRD=$FIX/foundation/recipe-fridge/prd.md
+FRM=$FIX/foundation/recipe-fridge/roadmap.md
+grep -qE '^layout:[[:space:]]*flat' "$FIX/.sdd.yml" 2>/dev/null || err "fixture $FIX/.sdd.yml missing or not 'layout: flat'"
+if [[ -f "$FPRD" && -f "$CONTRACT" ]]; then
+  while IFS= read -r h; do
+    grep -qxF -- "$h" "$FPRD" || err "fixture prd.md missing greenfield heading: $h"
+  done < <(contract_block prd-greenfield)
+  while IFS= read -r k; do
+    grep -qF -- "$k" "$FPRD" || err "fixture prd.md missing frontmatter key: $k"
+  done < <(contract_block prd-frontmatter)
+else
+  err "fixture prd.md missing ($FPRD)"
+fi
+if [[ -f "$FRM" && -f "$CONTRACT" ]]; then
+  while IFS= read -r h; do
+    grep -qxF -- "$h" "$FRM" || err "fixture roadmap.md missing heading: $h"
+  done < <(contract_block roadmap)
+  while IFS= read -r c; do
+    grep -qF -- "$c" "$FRM" || err "fixture roadmap.md missing column/field: $c"
+  done < <(contract_block roadmap-columns)
+else
+  err "fixture roadmap.md missing ($FRM)"
+fi
+# archive folders: <created-date>-<change-id>, change.md stamped archived
+for d in "$FIX"/archive/*/; do
+  [[ -d "$d" ]] || continue
+  aname=$(basename "$d")
+  adate=${aname:0:10}
+  [[ -f "$d/change.md" ]] || { err "fixture archive $aname has no change.md"; continue; }
+  grep -qx "status: archived" "$d/change.md" || err "fixture archive $aname: status must be archived"
+  grep -qx "created: $adate" "$d/change.md" || err "fixture archive $aname: created must equal folder date $adate"
+  grep -q "^archived_at: " "$d/change.md" || err "fixture archive $aname: archived_at missing"
+done
+[[ -f "$FIX/changes/meal-plan/change.md" ]] && grep -qx "status: implementing" "$FIX/changes/meal-plan/change.md" \
+  || err "fixture changes/meal-plan/change.md must exist with status: implementing"
+ok "fixture prd, roadmap, archive and changes checked against the contract"
+
+# --- 13. ownership line in every skill (R5) -----------------------------
+OWN_ALL='Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.'
+OWN_REVIEW='Never writes `shape-notes.md` or `roadmap.md`.'
+for dir in skills/pm-*/; do
+  name=$(basename "$dir")
+  [[ -f "$dir/SKILL.md" ]] || continue
+  if [[ "$name" == "pm-prd-review" ]]; then
+    grep -qF -- "$OWN_REVIEW" "$dir/SKILL.md" || err "$name/SKILL.md missing ownership line: $OWN_REVIEW"
+  else
+    grep -qF -- "$OWN_ALL" "$dir/SKILL.md" || err "$name/SKILL.md missing ownership line: $OWN_ALL"
+  fi
+done
+ok "ownership line present in every skill"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"

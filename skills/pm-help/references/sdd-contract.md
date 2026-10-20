@@ -1,0 +1,216 @@
+# sdd-skills consumer contract (pinned)
+
+The PM skills never link into the `sdd-skills` plugin and never copy its files. Everything they
+need to know about the artifacts `sdd-skills` writes is restated here, as data, and pinned to one
+version. `scripts/check-sdd-contract.sh <path-to-sdd-toolkit>` greps a local `sdd-toolkit` checkout
+for every string in the marker blocks below and reports drift.
+
+## Version
+
+```yaml
+sdd_skills_version: 0.4.1
+```
+
+Source of the strings below: `sdd-skills` 0.4.1 (PRD schema, `sdd-prd`, `sdd-roadmap`, `sdd-new`,
+`sdd-archive`, `sdd-impl-review`, `sdd-run`). When `sdd-skills` ships a different version, run the
+drift script first; update this file only after the diff is understood.
+
+### Marker-block extraction rule
+
+Each list is wrapped in `<!-- <name>:start -->` / `<!-- <name>:end -->` lines. Inside a block, one
+entry per line, written as ``- `<string>` ``. The string is everything between the first ``- ` ``
+and the **last** backtick on the line (so a string may itself contain backticks). Lines in a block
+that do not match this form are ignored. Headings are written with their `## ` prefix. Strings are
+copied exactly as `sdd-skills` writes them. `scripts/validate-structure.sh` and
+`scripts/check-sdd-contract.sh` use this same rule:
+
+```bash
+sed -n -E 's/^- `(.*)`[[:space:]]*$/\1/p'
+```
+
+## Install block
+
+Print this verbatim when a required `sdd-*` skill is missing:
+
+```
+The PM skills need the sdd-skills plugin. Install it, then restart this session:
+  /plugin marketplace add https://gitlab.com/norbert.suski/sdd-toolkit.git
+  /plugin install sdd-skills@sdd-toolkit
+For a local checkout instead: claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
+```
+
+## Required skills
+
+A PM skill that invokes an sdd skill first checks that the skill is listed among the host's
+available skills. The set the PM toolkit relies on:
+
+- `sdd-init` — scaffolds a `context/` root (the only writer of `.sdd.yml` and the root `README.md`)
+- `sdd-frame` — challenges the framing before a change is planned
+- `sdd-shape` — facilitated discovery; sole writer of `shape-notes.md`
+- `sdd-prd` — sole writer of `prd.md`
+- `sdd-roadmap` — sole writer of `roadmap.md` (`sdd-archive` also edits its `Done` section and item status)
+
+Any of them missing → STOP with the Install block above (read-only skills may continue with the
+branches that do not need that skill, see the individual skill).
+
+## PRD contract
+
+Path: `$CONTEXT_ROOT/foundation/<project-slug>/prd.md` (versioned saves `prd-vN.md` may sit beside it).
+
+Frontmatter keys (names are load-bearing; order is not). `status` is one of `draft | reviewed | locked`;
+`context_type` is `greenfield | brownfield`; `delivery_mode` is `mvp | product-feature`.
+`timeline_budget` is `null`, or `{ hard_deadline: <YYYY-MM-DD> }` in `product-feature` mode, or the
+`mvp_weeks` / `delivery_weeks` + `hard_deadline` + `after_hours_only` object in `mvp` mode.
+`audience` is never a frontmatter key. Flat roots omit `app:`.
+
+<!-- prd-frontmatter:start -->
+- `project:`
+- `version:`
+- `status:`
+- `created:`
+- `context_type:`
+- `delivery_mode:`
+- `timeline_budget:`
+- `hard_deadline:`
+<!-- prd-frontmatter:end -->
+
+Greenfield PRD, 10 `##` headings in this order:
+
+<!-- prd-greenfield:start -->
+- `## Vision & Problem Statement`
+- `## User & Persona`
+- `## Success Criteria`
+- `## User Stories`
+- `## Functional Requirements`
+- `## Non-Functional Requirements`
+- `## Business Logic`
+- `## Access Control`
+- `## Non-Goals`
+- `## Open Questions`
+<!-- prd-greenfield:end -->
+
+Brownfield PRD, 11 `##` headings in this order:
+
+<!-- prd-brownfield:start -->
+- `## Current System Overview`
+- `## Problem Statement & Motivation`
+- `## User & Persona`
+- `## Success Criteria`
+- `## User Stories`
+- `## Scope of Change`
+- `## Constraints & Compatibility`
+- `## Business Logic Changes`
+- `## Access Control Changes`
+- `## Non-Goals`
+- `## Open Questions`
+<!-- prd-brownfield:end -->
+
+Line formats inside a PRD:
+
+- `## Success Criteria` carries `### Primary`, `### Secondary`, `### Guardrails`.
+- User story heading: `### US-NN: <Title>` (two-digit, from `01`), followed by Given/When/Then.
+- Functional requirement (greenfield) is one line matching
+  `^- FR-\d{3}: .*Priority: (must-have|nice-to-have)`. Brownfield uses `## Scope of Change` bullets
+  tagged `[new]`, `[modified]`, `[removed]`, `[preserved]` instead of FR lines.
+- `## Open Questions` is a numbered list; an entry that gates the PRD ends with `Block: yes`.
+
+## Roadmap contract
+
+Path: `$CONTEXT_ROOT/foundation/<project-slug>/roadmap.md`. Frontmatter: `project`, `version`,
+`status` (`draft | active | locked`), `created`, `updated`, `prd_version`, `main_goal`, `top_blocker`.
+
+Required `##` headings (10), in this order. `## Streams` is optional and sits between `## At a glance`
+and `## Baseline` when present (11 headings then).
+
+<!-- roadmap:start -->
+- `## Vision recap`
+- `## North star`
+- `## At a glance`
+- `## Baseline`
+- `## Foundations`
+- `## Slices`
+- `## Backlog Handoff`
+- `## Open Roadmap Questions`
+- `## Parked`
+- `## Done`
+<!-- roadmap:end -->
+
+<!-- roadmap-optional:start -->
+- `## Streams`
+<!-- roadmap-optional:end -->
+
+Tables and item fields, listed one per entry (padded table headers do not grep as whole rows).
+`## At a glance` columns: `ID`, `Change ID`, `Outcome (user can …)`, `Prerequisites`, `PRD refs`,
+`Status`. `## Backlog Handoff` columns: `Roadmap ID`, `Change ID`, `Suggested issue title`,
+``Ready for `/sdd-plan` ``, `Notes`. Every `### S-NN:` slice carries nine fields (`Outcome`,
+`Change ID`, `PRD refs`, `Prerequisites`, `Parallel with`, `Blockers`, `Unknowns`, `Risk`, `Status`);
+every `### F-NN:` foundation carries the same plus `Unlocks`.
+
+<!-- roadmap-columns:start -->
+- `Roadmap ID`
+- `Change ID`
+- `Outcome (user can …)`
+- `Prerequisites`
+- `PRD refs`
+- `Suggested issue title`
+- `Ready for `/sdd-plan``
+- `Notes`
+- `- **Outcome:**`
+- `- **Change ID:**`
+- `- **PRD refs:**`
+- `- **Prerequisites:**`
+- `- **Parallel with:**`
+- `- **Blockers:**`
+- `- **Unknowns:**`
+- `- **Risk:**`
+- `- **Status:**`
+- `- **Unlocks:**`
+<!-- roadmap-columns:end -->
+
+Item status enum (`Status` column and `- **Status:**` field): `proposed | ready | planning | in-progress | done | blocked`.
+`blocked` means at least one Unknown with `Block: yes`. `/sdd-roadmap` emits `proposed`, `ready`, `blocked`;
+`/sdd-archive` flips an item to `done` and appends to `## Done`:
+``- **<ID>: <Outcome>** — Archived <YYYY-MM-DD> → `<root>/archive/<created-date>-<change-id>/`. Lesson: —.``
+Slices are in dependency order; ids are `F-NN` and `S-NN`; the `Change ID` is kebab-case and is the
+join key to `changes/<change-id>/` and `archive/`.
+
+## Change contract
+
+Written only by sdd change skills (`/sdd-new`, `/sdd-plan`, `/sdd-implement`, `/sdd-impl-review`,
+`/sdd-archive`); the PM toolkit reads them and never writes them.
+
+- Live change: `$CONTEXT_ROOT/changes/<change-id>/change.md` (also `plan.md`, `plan-brief.md`, `reviews/`).
+- Archived change: `$CONTEXT_ROOT/archive/<created-date>-<change-id>/change.md`, where `<created-date>`
+  is the change's `created:` date (`YYYY-MM-DD`). The stamped file carries `status: archived`.
+- Lifecycle `status` values include `new`, `planned`, `plan_reviewed`, `implementing`, `implemented`, `impl_reviewed`, `archived`.
+- `archived_at:` is an ISO-8601 UTC datetime (`2026-10-08T09:30:00Z`); read the first 10 characters as the date.
+- A full verification sets `status: impl_reviewed` together with the `verified_*` keys. Verdict values
+  as `sdd-skills` writes them: `APPROVED`, `NEEDS ATTENTION` (with a space), `REJECTED`.
+
+<!-- change-keys:start -->
+- `status:`
+- `created:`
+- `archived_at:`
+- `verified_verdict:`
+- `verified_source:`
+- `verified_at:`
+<!-- change-keys:end -->
+
+## Contract check procedure
+
+Every PM skill that parses `prd.md` or `roadmap.md` runs this before reading anything else from it:
+
+1. Pick the heading list: `prd-greenfield` or `prd-brownfield` (by the PRD's `context_type`), or `roadmap`.
+2. For each heading, test for an exact whole-line match, for example
+   `grep -qxF -- "## Success Criteria" prd.md`.
+3. Collect the headings that did not match.
+4. None missing → continue. Any missing → print one line and STOP; never guess-parse:
+
+   ```
+   CONTRACT MISMATCH: <file> missing <comma-separated headings>; sdd-skills expected 0.4.1
+   ```
+
+In plain mode say it in words instead ("The product write-up is missing sections my other steps rely on:
+… . Please re-run the PRD step"), and keep the exact line for the technical log. The drift check
+(`scripts/check-sdd-contract.sh`) is a maintainer tool, run by hand against a local sdd-toolkit
+checkout; skills never run it.
