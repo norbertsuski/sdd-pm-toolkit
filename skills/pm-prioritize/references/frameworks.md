@@ -62,7 +62,7 @@ outside condition: it is listed in `## Open Questions`, never checked as a confl
 
 - **RICE and ICE:** item A has a conflict with its prerequisite B when A's score is **strictly higher** than B's. Reported as
   "A needs B first". Equal scores are not a conflict.
-- **MoSCoW:** a **Must** item whose prerequisite is **Could** or **Won't** is a conflict ("A needs B first").
+- **MoSCoW:** item A has a conflict with its prerequisite B when A's category is **higher** than B's (order Must > Should > Could > Won't): for example a Must or a Should whose prerequisite is Could or Won't, or a Must whose prerequisite is Should. Same category is not a conflict. Reported as "A needs B first".
 - A prerequisite whose Status is `done` never conflicts (it is not scored and is not in the list).
 - A prerequisite that is not done but unscored is looked through: its own prerequisites are checked instead. An unscored item
   cannot itself be in a conflict; `## Open Questions` says which pairs could not be checked.
@@ -73,7 +73,7 @@ outside condition: it is listed in `## Open Questions`, never checked as a confl
 The proposed order is the highest-scoring order that still puts every unfinished prerequisite first: repeatedly place, among the
 items whose unfinished prerequisites are all placed, the highest-scoring one (ties keep the current roadmap order; unscored items
 come last in roadmap order). A dependency always beats a score. `## Proposed Sequence Changes` lists where this order differs
-from the roadmap's current order among the scored items; it is a list for the person to bring to `/sdd-roadmap`, never an edit.
+from the roadmap's current order among the scored items; it is a list for the person to use as input to a `/sdd-roadmap` re-run or to hand-edit the roadmap order, never an edit by this skill.
 
 ## prioritization.md layout
 
@@ -142,7 +142,7 @@ line states how to use it. No changes → `None: the scores agree with the curre
 2. Note: S-06 is blocked, so moving it earlier changes nothing until its decision is made.
 3. Note: S-05 is already in progress and shifts later; that means pausing work that has begun.
 
-To apply: bring this list to a `/sdd-roadmap` re-run and say the changes in your own words at its interview. This file does not edit `roadmap.md`.
+To apply: use this list as input to the three anchor questions of a `/sdd-roadmap` re-run (it has no per-item order override, and it regenerates `roadmap.md` from scratch: statuses are rebuilt and `## Done` starts empty; the archived copy keeps the old one), or edit the order in `roadmap.md` by hand. This file does not edit `roadmap.md`.
 ```
 
 A PRD run lists the proposed priority order of the requirements instead (`1. FR-004 ...`) and says the order has no dependency

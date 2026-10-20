@@ -4,8 +4,8 @@ description: >
   Rank what is left to build with a scoring method the person picks: RICE (recommended), ICE or MoSCoW. Scores every
   roadmap item that is not done (without a roadmap: the PRD's requirements) from inputs the person supplies, never
   guessed; computes each score with python3, not in the head; reports dependency conflicts ("S-06 needs S-04 first"
-  when an item outranks its own prerequisite); proposes sequence changes the person can take to a /sdd-roadmap
-  re-run; writes foundation/<slug>/prioritization.md. Never edits roadmap.md. Use after the roadmap exists, or any
+  when an item outranks its own prerequisite); proposes a sequence the person can use when re-running /sdd-roadmap
+  or hand-editing the roadmap; writes foundation/<slug>/prioritization.md. Never edits roadmap.md. Use after the roadmap exists, or any
   time the order is being argued about. Trigger phrases: "prioritize the roadmap", "rank the backlog", "RICE score",
   "ICE score", "MoSCoW", "what should we build first", "what to cut", "prioritise these features", "score these items",
   "priorytetyzacja", "zrób priorytetyzację", "uszereguj roadmapę", "co budować najpierw", "co wyciąć", "ocena RICE",
@@ -30,7 +30,8 @@ the plan is right rather than the order (`/sdd-roadmap`), or fewer than two item
 ## Relationship to other skills
 
 - `/sdd-roadmap` — owns `roadmap.md`. This skill reads it and never edits it. A proposed order becomes real only when the person
-  brings the list to a `/sdd-roadmap` re-run, whose interview accepts overrides in the person's own words (Step 10).
+  acts on it: as input to a `/sdd-roadmap` re-run (its interview has three anchor questions, no per-item order override, and a re-run
+  regenerates the file) or as a hand-edit of the roadmap order (Step 10).
 - `/pm-metrics` — if `metrics.md` exists its baselines may help the person estimate reach; nothing is copied from it.
 - `/pm-forecast` — turns throughput history into date ranges. The effort number asked here is a ranking input, not a schedule.
 - `/pm-backlog-sync` — pushes the roadmap's items to a tracker; it does not use this file's order (the roadmap is the source).
@@ -47,7 +48,7 @@ behavior fixtures — `references/eval-cases.md`.
 1. **A project name** → use it. **A method named** ("RICE", "MoSCoW") → remember it as the person's choice for Step 4.
 2. **Nothing given** → resolve the project (Step 1).
 3. **A request to change the roadmap** ("move S-05 up in the roadmap", "apply this ranking to the roadmap") → say plainly that this
-   skill never edits `roadmap.md`; offer to score and propose the order, then hand the list over for a `/sdd-roadmap` re-run (Step 10).
+   skill never edits `roadmap.md`; offer to score and propose the order, then explain the two ways to act on the list (Step 10).
    Carry on with scoring if the person agrees.
 
 Say what is about to happen in one or two sentences, for example: "I'll list what is still to build, ask you a few numbers about each
@@ -171,6 +172,7 @@ command. The script validates again and exits non-zero with an `INVALID:` messag
 ask for the input again, and never print a score. Exact form (RICE: `rice <reach> <impact> <confidence> <effort>`; ICE:
 `ice <impact> <confidence> <ease>`):
 
+<!-- pm-prioritize:score-script -->
 ```bash
 python3 -c 'import sys,re
 from decimal import Decimal,ROUND_HALF_UP
@@ -198,12 +200,13 @@ item gets its inputs re-asked (Step 5 rules) and recomputed. Never adjust a numb
 ### Step 7 — Dependency conflicts and the proposed order
 
 Run the sequence command **once** for the scored and unscored items together; it applies the conflict rule in `references/frameworks.md`
-(a RICE/ICE item scoring strictly higher than a prerequisite; a MoSCoW Must whose prerequisite is Could or Won't; `done` prerequisites
+(an item ranking strictly higher than a prerequisite: a higher RICE/ICE score, or a higher MoSCoW category such as a Must or Should whose prerequisite is Could or Won't; `done` prerequisites
 are not in the list so they never conflict; an unscored prerequisite is looked through) and builds the dependency-respecting order. One
 argument per item in roadmap order, `ID=score=PREREQS`: the RICE/ICE score, or the MoSCoW rank (Must 4, Should 3, Could 2, Won't 1), or
 `-` when unscored; `PREREQS` is a comma-separated list of ids or `-`. Ids are validated first (`[A-Z]{1,2}-` and digits) and only
 unfinished prerequisites are listed. First argument: `rice`, `ice` or `moscow`.
 
+<!-- pm-prioritize:sequence-script -->
 ```bash
 python3 -c 'import sys,re
 from decimal import Decimal
@@ -228,7 +231,7 @@ print("ORDER "+" ".join(out))
 for a in seq:
     if it[a][0] is None: continue
     for b in dict.fromkeys(need(a)):
-        if (it[a][0]==4 and it[b][0] in(1,2)) if mode=="moscow" else it[a][0]>it[b][0]: print("CONFLICT",a,"needs",b,"first")' rice S-04=106.7=- S-05=75.0=- S-06=240.0=S-04
+        if it[a][0]>it[b][0]: print("CONFLICT",a,"needs",b,"first")' rice S-04=106.7=- S-05=75.0=- S-06=240.0=S-04
 ```
 
 (prints `ORDER S-04 S-06 S-05` and `CONFLICT S-06 needs S-04 first`). A `CYCLE` or `INVALID` exit → report it and STOP the pass; the roadmap's
@@ -289,13 +292,20 @@ the path (technical mode) or say it is saved (plain mode).
 
 ### Step 10 — Handoff
 
-The proposed changes are a **list the person brings to a `/sdd-roadmap` re-run**: its interview accepts overrides in the person's own words (for
-example "put S-05 before S-04"). That re-run regenerates the roadmap and asks before replacing the existing file. This skill does not edit
-`roadmap.md`, prepare the re-run, or start it.
+The proposed changes are a **list**; this skill cannot apply it. Say both routes and let the person choose:
+
+- **(a) Re-run `/sdd-roadmap`, using the list as input.** Its interview asks three anchor questions (main goal, north star, top blocker); it has
+  no per-item order override, so the list informs those answers and the new order follows from them. **Warning, say it every time:** a re-run
+  regenerates `roadmap.md` from scratch (archive-then-replace). Statuses are rebuilt and `## Done` starts empty in the new file; the archived
+  copy keeps the old statuses and Done list.
+- **(b) Edit the order in `roadmap.md` by hand.** `sdd-skills` allows human hand-edits; the person keeps every item's Prerequisites consistent
+  with the new order. The skill never makes this edit, even when asked.
+
+This skill does not prepare, write or start either route.
 
 Plain mode ends with the handoff block from `../pm-help/references/plain-language.md`: how many items were ranked, how many conflicts were
 found, that the order above is only a suggestion until the plan itself is changed, and the next step in product terms:
-"update the plan with these priorities" (`/sdd-roadmap`), then "set up the tracker" (`/pm-backlog-sync`) or "see when it could be done" (`/pm-forecast`). Technical mode
+"update the plan with these priorities" (re-run `/sdd-roadmap`, with the warning that the plan is rebuilt and finished-work statuses start afresh, or edit the order by hand), then "set up the tracker" (`/pm-backlog-sync`) or "see when it could be done" (`/pm-forecast`). Technical mode
 prints the file path, the counts (scored, unscored, conflicts, proposed changes) and the exact next command (`/sdd-roadmap`). A PRD run says the
 next step is the roadmap, after the technology step. Confirm a skill is in the host's available list before naming it. Do not start the next
 skill.
@@ -310,7 +320,7 @@ One file: `$CONTEXT_ROOT/foundation/<slug>/prioritization.md`; frontmatter `proj
 
 Never writes `prd.md`, `shape-notes.md`, or `roadmap.md`.
 
-1. **Never edits the roadmap.** "Apply this ranking to the roadmap" is declined; the answer is the proposed list and a `/sdd-roadmap` re-run in the person's hands. No status, order or estimate is ever written to `roadmap.md`.
+1. **Never edits the roadmap.** "Apply this ranking to the roadmap" is declined; the answer is the proposed list and the two routes in Step 10 (a `/sdd-roadmap` re-run with its regeneration warning, or a hand-edit), both in the person's hands. No status, order or estimate is ever written to `roadmap.md`.
 2. **Never invents an input.** Reach, impact, confidence, effort, ease and categories come from the person, from the allowed sets only; a missing one leaves the item unscored. No defaults, benchmarks or guesses, and no effort derived from `forecast.md` or history.
 3. **Scores are computed with `python3 -c`, never mentally,** from validated numbers passed as arguments. Text the person typed is never placed in a script or a shell command. An `INVALID:` exit shows its message and re-asks; no score is shown for it.
 4. **Done items are excluded.** `done` items are never scored, listed as candidates or counted as conflicts; `blocked` items are scored and flagged; in-progress items are scored and flagged.

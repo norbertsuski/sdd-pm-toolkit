@@ -389,6 +389,52 @@ if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
 fi
 ok "pm-prioritize files, formulas, python3 -c, headings and eval ids checked"
 
+# --- 19. pm-prioritize: run the two embedded python3 -c scripts from SKILL.md ------
+# The scripts sit in fenced bash blocks right after an HTML-comment marker; the script text is the
+# single-quoted part of the block (it contains no single quote), run here with fixed test arguments.
+pp_script() {
+  python3 -c 'import sys,re
+s=open(sys.argv[1]).read()
+m=re.search(re.escape("<!-- "+sys.argv[2]+" -->")+r"\n```bash\npython3 -c \x27([^\x27]*)\x27 [^\n]*\n```",s,re.S)
+sys.stdout.write(m.group(1) if m else "")' "$PP/SKILL.md" "$1"
+}
+if [[ -f "$PP/SKILL.md" ]]; then
+  SCORE_PY=$(pp_script pm-prioritize:score-script)
+  SEQ_PY=$(pp_script pm-prioritize:sequence-script)
+  if [[ -z "$SCORE_PY" || -z "$SEQ_PY" ]]; then
+    err "pm-prioritize/SKILL.md must hold both scripts after <!-- pm-prioritize:score-script --> / <!-- pm-prioritize:sequence-script --> markers"
+  else
+    pp_tmp=$(mktemp -d)
+    pp_expect() { # pp_expect <label> <expected substring> <script> args...
+      local label=$1 want=$2 py=$3; shift 3
+      local out; out=$(python3 -c "$py" "$@" 2>&1)
+      [[ "$out" == *"$want"* ]] || err "pm-prioritize script test '$label': expected '$want', got '$out'"
+    }
+    pp_expect "RICE 400 1 80 3" "106.7" "$SCORE_PY" rice 400 1 80 3
+    pp_expect "RICE rounds to one decimal (0.125)" "0.1" "$SCORE_PY" rice 1 0.5 100 4
+    pp_expect "RICE effort 0" "INVALID" "$SCORE_PY" rice 400 1 80 0
+    pp_expect "RICE impact 4" "INVALID" "$SCORE_PY" rice 400 4 80 3
+    pp_expect "RICE confidence 70" "INVALID" "$SCORE_PY" rice 400 1 70 3
+    pp_expect "ICE 8 7 5" "280" "$SCORE_PY" ice 8 7 5
+    pp_expect "ICE 11" "INVALID" "$SCORE_PY" ice 11 7 5
+    pp_expect "injection-shaped argument" "INVALID" "$SCORE_PY" rice 5 1 80 "3;touch $pp_tmp/pwned"
+    [[ ! -e "$pp_tmp/pwned" ]] || err "pm-prioritize score script executed an injected argument"
+    pp_expect "sequence PZ-03 order" "ORDER S-04 S-06 S-05" "$SEQ_PY" rice S-04=106.7=- S-05=75.0=- S-06=240.0=S-04
+    pp_expect "sequence PZ-03 conflict" "CONFLICT S-06 needs S-04 first" "$SEQ_PY" rice S-04=106.7=- S-05=75.0=- S-06=240.0=S-04
+    pp_expect "MoSCoW Must needs Could" "CONFLICT S-06 needs S-04 first" "$SEQ_PY" moscow S-04=2=- S-06=4=S-04
+    pp_expect "MoSCoW Should needs Won't" "CONFLICT S-06 needs S-04 first" "$SEQ_PY" moscow S-04=1=- S-06=3=S-04
+    pp_expect "MoSCoW Should needs Could" "CONFLICT S-06 needs S-04 first" "$SEQ_PY" moscow S-04=2=- S-06=3=S-04
+    seq_out=$(python3 -c "$SEQ_PY" moscow S-04=4=- S-06=2=S-04 2>&1)
+    [[ "$seq_out" != *CONFLICT* ]] || err "pm-prioritize MoSCoW: Could needing a Must must not conflict (got '$seq_out')"
+    seq_out=$(python3 -c "$SEQ_PY" rice S-04=106.7=- S-06=25.0=S-04 2>&1)
+    [[ "$seq_out" != *CONFLICT* ]] || err "pm-prioritize RICE: a lower score than its prerequisite must not conflict (got '$seq_out')"
+    pp_expect "sequence rejects injection-shaped item" "INVALID" "$SEQ_PY" rice "S-04=1=-;touch $pp_tmp/pwned"
+    [[ ! -e "$pp_tmp/pwned" ]] || err "pm-prioritize sequence script executed an injected argument"
+    rm -rf "$pp_tmp"
+  fi
+fi
+ok "pm-prioritize embedded scripts run (scores, rejections, injection, conflicts)"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
