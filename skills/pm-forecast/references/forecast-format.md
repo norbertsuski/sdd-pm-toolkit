@@ -15,11 +15,15 @@ updated: 2026-10-20
 method: monte-carlo-throughput
 runs: 2000
 seed: 42
+deadline_risk: none
 ---
 ```
 
 `created` is kept on an overwrite; `updated` is today. `runs` and `seed` are the values the script reported, so a
-re-run with the same values on the same data reproduces the same dates.
+re-run with the same values on the same data reproduces the same dates. `deadline_risk` is the script's
+`deadline_risk` value, copied unchanged: `none` | `p85-after-deadline` | `p50-after-deadline`. It is `none` when
+no deadline is set and when the status is `insufficient-history`. It is the machine-readable form of the
+`## Deadline Check` verdict, so other skills (`pm-status`) read the deadline result from here and never recompute it.
 
 ## Complete example (fixture, today 2026-10-20)
 
@@ -31,6 +35,7 @@ updated: 2026-10-20
 method: monte-carlo-throughput
 runs: 2000
 seed: 42
+deadline_risk: none
 ---
 
 # Forecast: Recipe Fridge

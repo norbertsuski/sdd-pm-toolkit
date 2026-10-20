@@ -107,6 +107,96 @@ print(len(r)-1,d[0],d[1],d[2],d[3],sep="|")' "$bs_tmp/out.csv")"
 fi
 rm -rf "$bs_tmp"
 
+# ========================= pm-status (Task 10) ==========================
+
+ST_SKILL=skills/pm-status/SKILL.md
+
+# rag <north_star_blocked> <needs_triage> <blocking_unknown> <deadline_risk>
+# The traffic-light rule pm-status's SKILL.md uses. yes|no flags; deadline_risk is the value pm-forecast
+# records in forecast.md (none | p85-after-deadline | p50-after-deadline), "none" when no fresh forecast is used.
+rag() {
+  local north_star_blocked="$1" needs_triage="$2" blocking_unknown="$3" deadline_risk="$4"
+  if [[ "$north_star_blocked" == yes || "$needs_triage" == yes || "$deadline_risk" == p50-after-deadline ]]; then echo red
+  elif [[ "$blocking_unknown" == yes || "$deadline_risk" == p85-after-deadline ]]; then echo amber
+  else echo green
+  fi
+}
+
+# item_state <roadmap_status> <archived> <change_dir> <block_unknown>  (flags yes|no)
+# Reporting view of one roadmap item (the authoritative state machine stays /sdd-project-run --status):
+# done > in-progress > blocked > the roadmap's own Status.
+item_state() {
+  local roadmap_status="$1" archived="$2" change_dir="$3" block_unknown="$4"
+  if [[ "$roadmap_status" == done || "$archived" == yes ]]; then echo done
+  elif [[ "$change_dir" == yes ]]; then echo in-progress
+  elif [[ "$roadmap_status" == blocked || "$block_unknown" == yes ]]; then echo blocked
+  else echo "$roadmap_status"
+  fi
+}
+
+# change_needs_triage <status> <verified_verdict> <pending_decision_lines>
+# sdd's classification of a current verification (R13): negative = REJECTED, or NEEDS ATTENTION (with a
+# space) whose review file still has "- **Decision**: PENDING" lines. Positive: APPROVED, SKIPPED (...),
+# triaged NEEDS ATTENTION. Only a change with status impl_reviewed carries a verification.
+change_needs_triage() {
+  local status="$1" verdict="$2" pending="$3"
+  if [[ "$status" != impl_reviewed ]]; then echo no
+  elif [[ "$verdict" == REJECTED ]]; then echo yes
+  elif [[ "$verdict" == "NEEDS ATTENTION" && "$pending" -gt 0 ]]; then echo yes
+  else echo no
+  fi
+}
+# --- ST: rag (red beats amber beats green) ---
+assert_eq ST-rag-green green "$(rag no no no none)"
+assert_eq ST-rag-amber-blocking-unknown amber "$(rag no no yes none)"
+assert_eq ST-rag-amber-p85 amber "$(rag no no no p85-after-deadline)"
+assert_eq ST-rag-red-p50 red "$(rag no no no p50-after-deadline)"
+assert_eq ST-rag-red-north-star-blocked red "$(rag yes no no none)"
+assert_eq ST-rag-red-needs-triage red "$(rag no yes no none)"
+assert_eq ST-rag-red-beats-amber red "$(rag no no yes p50-after-deadline)"
+assert_eq ST-rag-amber-unknown-and-p85 amber "$(rag no no yes p85-after-deadline)"
+
+# --- ST: reporting state of one roadmap item (precedence: done, in-progress, blocked, roadmap Status) ---
+assert_eq ST-state-roadmap-done done "$(item_state done no no no)"
+assert_eq ST-state-archived-wins done "$(item_state ready yes no no)"
+assert_eq ST-state-archived-beats-changes done "$(item_state proposed yes yes yes)"
+assert_eq ST-state-change-dir-wins in-progress "$(item_state ready no yes no)"
+assert_eq ST-state-change-dir-beats-blocked in-progress "$(item_state blocked no yes yes)"
+assert_eq ST-state-roadmap-blocked blocked "$(item_state blocked no no no)"
+assert_eq ST-state-unknown-blocks blocked "$(item_state proposed no no yes)"
+assert_eq ST-state-else-roadmap-proposed proposed "$(item_state proposed no no no)"
+assert_eq ST-state-else-roadmap-ready ready "$(item_state ready no no no)"
+assert_eq ST-state-else-roadmap-in-progress in-progress "$(item_state in-progress no no no)"
+
+# --- ST: needs-triage evidence of ONE active change (R13: sdd's negative = REJECTED, or NEEDS ATTENTION with PENDING decisions) ---
+assert_eq ST-triage-rejected yes "$(change_needs_triage impl_reviewed REJECTED 0)"
+assert_eq ST-triage-attention-pending yes "$(change_needs_triage impl_reviewed 'NEEDS ATTENTION' 2)"
+assert_eq ST-triage-attention-triaged no "$(change_needs_triage impl_reviewed 'NEEDS ATTENTION' 0)"
+assert_eq ST-triage-approved no "$(change_needs_triage impl_reviewed APPROVED 0)"
+assert_eq ST-triage-skipped-trivial no "$(change_needs_triage impl_reviewed 'SKIPPED (trivial)' 0)"
+assert_eq ST-triage-skipped-declined no "$(change_needs_triage impl_reviewed 'SKIPPED (declined)' 0)"
+assert_eq ST-triage-underscore-spelling-is-not-sdd no "$(change_needs_triage impl_reviewed NEEDS_ATTENTION 3)"
+assert_eq ST-triage-not-impl-reviewed no "$(change_needs_triage implementing REJECTED 0)"
+
+# --- ST: forecast freshness script embedded in SKILL.md (fresh = dated 0..7 days before today) ---
+ST_AGE_PY=$(embedded_script "$ST_SKILL" pm-status:age-script)
+assert_eq ST-age-script-found yes "$([[ -n "$ST_AGE_PY" ]] && echo yes || echo no)"
+if [[ -n "$ST_AGE_PY" ]]; then
+  age() { python3 -c "$ST_AGE_PY" "$1" "$2"; }
+  assert_eq ST-age-same-day "fresh 0" "$(age 2026-10-20 2026-10-20)"
+  assert_eq ST-age-seven-days "fresh 7" "$(age 2026-10-13 2026-10-20)"
+  assert_eq ST-age-eight-days "stale 8" "$(age 2026-10-12 2026-10-20)"
+  assert_eq ST-age-ten-days "stale 10" "$(age 2026-10-10 2026-10-20)"
+  assert_eq ST-age-future-is-stale "stale -1" "$(age 2026-10-21 2026-10-20)"
+  assert_eq ST-age-bad-format INVALID "$(age 2026-10-1 2026-10-20)"
+  assert_eq ST-age-impossible-date INVALID "$(age 2026-13-40 2026-10-20)"
+  assert_eq ST-age-trailing-newline INVALID "$(age "$(printf '2026-10-13\n')x" 2026-10-20)"
+  st_tmp=$(mktemp -d)
+  assert_eq ST-age-injection-shaped INVALID "$(age "2026-10-13;touch $st_tmp/pwned" 2026-10-20)"
+  assert_eq ST-age-injection-not-executed no "$([[ -e "$st_tmp/pwned" ]] && echo yes || echo no)"
+  rm -rf "$st_tmp"
+fi
+
 # ============================== Summary ================================
 if [[ $fail -eq 0 ]]; then
   echo "validate-pm-evals: ALL CASES PASSED"

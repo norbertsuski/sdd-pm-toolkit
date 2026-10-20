@@ -464,7 +464,8 @@ if [[ -f "$PF/references/forecast-format.md" ]]; then
   for h in "## Forecast" "## Inputs" "## Assumptions & Caveats" "## Deadline Check"; do
     grep -qxF -- "$h" "$PF/references/forecast-format.md" || err "forecast-format.md missing heading: $h"
   done
-  for s in 'monte-carlo-throughput' 'ignores dependency depth and parallelism' 'blocked items' 'Team pace'; do
+  for s in 'monte-carlo-throughput' 'ignores dependency depth and parallelism' 'blocked items' 'Team pace' \
+           'deadline_risk: none' 'p85-after-deadline' 'p50-after-deadline'; do
     grep -qF -- "$s" "$PF/references/forecast-format.md" || err "forecast-format.md must mention '$s'"
   done
 fi
@@ -476,6 +477,12 @@ fi
 if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
   grep -F '`forecast.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'method' \
     || err "pm-artifacts.md forecast.md row must name the method frontmatter key"
+  grep -F '`forecast.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'deadline_risk' \
+    || err "pm-artifacts.md forecast.md row must name the deadline_risk frontmatter key (read by pm-status)"
+fi
+if [[ -f "$PF/SKILL.md" ]]; then
+  grep -qF 'deadline_risk` = the script' "$PF/SKILL.md" \
+    || err "pm-forecast/SKILL.md Step 6 must list the deadline_risk frontmatter key (read by pm-status)"
 fi
 ok "pm-forecast files, script, tests, CI line, headings and eval ids checked"
 
@@ -519,6 +526,46 @@ if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
     || err "pm-artifacts.md tracker-map.md row must name the tracker_project frontmatter key"
 fi
 ok "pm-backlog-sync files, tracker-map format, mandate strings, eval ids and CI line checked"
+
+# --- 22. pm-status: files, format headings, mandate strings, eval ids, integrations key, artifact row
+PS=skills/pm-status
+for f in SKILL.md references/status-format.md references/eval-cases.md; do
+  [[ -f "$PS/$f" ]] || err "missing $PS/$f"
+done
+if [[ -f "$PS/references/status-format.md" ]]; then
+  for h in "## Summary" "## Progress" "## Since Last Update" "## Risks & Blockers" "## Decisions Needed" "## Next Up" "## Forecast"; do
+    grep -qxF -- "$h" "$PS/references/status-format.md" || err "status-format.md missing heading: $h"
+  done
+  for s in 'rag: green | amber | red' '| ID | Change ID | Outcome | State | Note | Ticket |' 'RAG inputs:' 'north_star_blocked' \
+           'needs_triage' 'blocking_unknown' 'deadline_risk'; do
+    grep -qF -- "$s" "$PS/references/status-format.md" || err "status-format.md must mention '$s'"
+  done
+fi
+if [[ -f "$PS/SKILL.md" ]]; then
+  for s in '../pm-help/references/integrations.md' 'draft' '/sdd-project-run --status' 'CONTRACT MISMATCH' \
+           'Contract check procedure' 'status_page' 'Export file instead' 'Apply' 'NEEDS ATTENTION' 'REJECTED' \
+           '- **Decision**: PENDING' 'pm-status:age-script' 'single-quoted heredoc' 'never interpolated' \
+           'p50-after-deadline' 'p85-after-deadline' 'exports/<date>-status.md' 'exports/<date>-status.txt' \
+           'yes naming' 'Never posts' 'rag'; do
+    grep -qF -- "$s" "$PS/SKILL.md" || err "pm-status/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PS/references/eval-cases.md" ]]; then
+  for id in ST-01 ST-02 ST-03 ST-04 ST-05 ST-06 ST-07 ST-08; do
+    grep -qF "$id" "$PS/references/eval-cases.md" || err "pm-status eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$HELP_REFS/integrations.md" ]]; then
+  grep -qF 'status_page:' "$HELP_REFS/integrations.md" || err "integrations.md pm-config.yml schema must list the status_page key"
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F 'status/<date>.md' "$HELP_REFS/pm-artifacts.md" | grep -qF 'rag' \
+    || err "pm-artifacts.md status/<date>.md row must name the rag frontmatter key"
+fi
+if [[ -f skills/pm-help/SKILL.md ]] && grep -qF 'Planned for this release' skills/pm-help/SKILL.md; then
+  err "pm-help/SKILL.md must not list any skill as planned: v0.1 is complete with pm-status"
+fi
+ok "pm-status files, format headings, mandate strings, eval ids, status_page key and artifact row checked"
 
 echo
 if [[ $fail -eq 0 ]]; then

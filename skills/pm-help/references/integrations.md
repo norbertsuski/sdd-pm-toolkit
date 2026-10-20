@@ -34,9 +34,12 @@ docs: confluence | notion | none
 docs_location: <Confluence space key + parent page id | Notion parent page id>
 channel: slack | email | none
 channel_target: <#channel | email address list>
+status_page: <Confluence page id | Notion page id>
 ```
 
-Missing keys are treated as `none`. Never store tokens or credentials here.
+Missing keys are treated as `none`. `status_page` is written by `pm-status` right after it creates the
+stakeholder status page (the one page it then updates on later runs); it belongs to the system named by
+`docs` and is meaningless without it. Never store tokens or credentials here.
 
 ## Write protocol
 

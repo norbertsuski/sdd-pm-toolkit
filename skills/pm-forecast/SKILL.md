@@ -148,8 +148,8 @@ choose what), move the deadline, add capacity. Do not recommend one as correct, 
 ### Step 6 — Write `forecast.md`
 
 Path `$CONTEXT_ROOT/foundation/<slug>/forecast.md`, layout, frontmatter and headings exactly as in `references/forecast-format.md`
-(`project`, `created`, `updated`, `method: monte-carlo-throughput`, `runs`, `seed`; `## Forecast`, `## Inputs`,
-`## Assumptions & Caveats`, `## Deadline Check`). Dates in the file from the script's JSON and `date +%Y-%m-%d`. The four headings
+(`project`, `created`, `updated`, `method: monte-carlo-throughput`, `runs`, `seed`, `deadline_risk` = the script's value unchanged,
+which `/pm-status` reads; `## Forecast`, `## Inputs`, `## Assumptions & Caveats`, `## Deadline Check`). Dates in the file from the script's JSON and `date +%Y-%m-%d`. The four headings
 and the caveats are written in every case, including `insufficient-history` (no dates there).
 
 Preview the whole file first and ask: `1. Write forecast.md (Recommended)  2. Change something  3. Don't write`. Nothing is written
@@ -180,7 +180,7 @@ next skill.
 
 ## Output
 
-One file: `$CONTEXT_ROOT/foundation/<slug>/forecast.md`; frontmatter `project`, `created`, `updated`, `method`, `runs`, `seed`; sections
+One file: `$CONTEXT_ROOT/foundation/<slug>/forecast.md`; frontmatter `project`, `created`, `updated`, `method`, `runs`, `seed`, `deadline_risk`; sections
 `## Forecast`, `## Inputs`, `## Assumptions & Caveats`, `## Deadline Check`. Format and wording: `references/forecast-format.md`. Besides
 this file the skill may write `audience:` to `.sdd.local.yml` (plain-language rule) and nothing else. The script writes nothing.
 

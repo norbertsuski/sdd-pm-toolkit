@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (8 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (9 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -43,6 +43,7 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | `pm-prioritize` | Scores every roadmap item that is not done (without a roadmap: the PRD's requirements) with RICE (recommended), ICE or MoSCoW from numbers you give; scoring is computed with `python3`, never guessed. Reports dependency conflicts ("A needs B first"), proposes a sequence you can use for a `/sdd-roadmap` re-run or a hand-edit of the roadmap, and writes `prioritization.md`. Never edits `roadmap.md`. |
 | `pm-backlog-sync` | Copies the roadmap's Backlog Handoff into Jira or Linear through whatever tracker connection the host has, safely and repeatably: one issue per item (slice = Story, foundation = Task or a `foundation` label), title from the roadmap, description with outcome, PRD refs and the acceptance criteria of the linked user stories, label `sdd:<change-id>`, "is blocked by" links for prerequisites. Remembers which item became which issue in `tracker-map.md` (never in `roadmap.md`), so a re-run creates only what is new, updates only what changed and asks before anything unusual. Never deletes issues; roadmap items that vanished are reported as orphans. Every write waits for an explicit `Apply`. Without a tracker connection it writes a Jira CSV import file or a Markdown checklist and says no issues were created. |
 | `pm-forecast` | Answers "when will we be done?" with three dates (likely / very likely / almost certain), never one: a bundled stdlib `python3` script replays the weekly throughput of archived changes against the items left on the roadmap (Monte Carlo), checks the PRD's hard deadline, and writes `forecast.md`. With too little history it gives no dates and says what is needed. Never edits `roadmap.md`, which stays estimate-free. |
+| `pm-status` | Writes the stakeholder status report `status/<date>.md`: per-item state (done / in-progress / blocked / next) derived from the roadmap, `changes/` and `archive/`, a red / amber / green verdict from a fixed rule (never by feel), what changed since the previous report, risks, decisions needed, next up, and the saved forecast when it is at most 7 days old. Offers to publish a Confluence or Notion page (created once, then updated); Slack and email are drafts, and nothing is posted or sent without a yes that names the channel or recipients. Without a connection it saves paste-ready files. A reporting view: `/sdd-project-run --status` stays authoritative. |
 
 ## Ownership
 
