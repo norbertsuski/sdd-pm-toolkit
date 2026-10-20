@@ -107,7 +107,17 @@ Brownfield PRD, 11 `##` headings in this order:
 
 Line formats inside a PRD:
 
-- `## Success Criteria` carries `### Primary`, `### Secondary`, `### Guardrails`.
+- `## Success Criteria` carries exactly three subsections, in this order (greenfield and brownfield alike):
+
+<!-- prd-success-criteria:start -->
+- `### Primary`
+- `### Secondary`
+- `### Guardrails`
+<!-- prd-success-criteria:end -->
+
+  A skill that reads Success Criteria (`pm-metrics`) checks these as whole-line matches inside the
+  `## Success Criteria` section, right after the heading check of the contract procedure; a missing
+  subsection is the same `CONTRACT MISMATCH` stop.
 - User story heading: `### US-NN: <Title>` (two-digit, from `01`), followed by Given/When/Then.
 - Functional requirement (greenfield) is one line matching
   `^- FR-\d{3}: .*Priority: (must-have|nice-to-have)`. Brownfield uses `## Scope of Change` bullets
@@ -258,6 +268,10 @@ Every PM skill that parses `prd.md` or `roadmap.md` runs this before reading any
    ```
    CONTRACT MISMATCH: <file> missing <comma-separated headings>; sdd-skills expected 0.4.1
    ```
+
+Skills that read a PRD section with its own required subsections (the `prd-success-criteria` block) add
+those subsection lines to the same check: they are tested as whole-line matches, and a missing one is
+reported in the same `CONTRACT MISMATCH` line (for example `prd.md missing ### Guardrails`).
 
 In plain mode say it in words instead ("The product write-up is missing sections my other steps rely on:
 … . Please re-run the PRD step"), and keep the exact line for the technical log. The drift check

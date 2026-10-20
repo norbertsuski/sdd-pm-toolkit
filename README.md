@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (4 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (5 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -39,6 +39,7 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | `pm-research-synthesis` | Turns interview transcripts, notes and survey exports into evidence-linked insights (verbatim quotes, pseudonymized) with a seed for shaping. |
 | `pm-discover` | The discovery router: derives the project's stage from files on disk and walks the PM, one human-gated step at a time, through `/sdd-init`, `/sdd-shape`, `/sdd-prd`, `/pm-prd-review`, the stack step and `/sdd-roadmap`. Writes nothing itself. |
 | `pm-prd-review` | Reviews the PRD on seven dimensions (PASS / CONCERNS / FAIL, quoted evidence), gives an APPROVED / NEEDS_ATTENTION / REJECTED verdict, saves a report, and triages findings one by one: approved fixes edit `prd.md` (diff shown first); may set `status: reviewed`, never `locked`. |
+| `pm-metrics` | Derives a north-star metric (you pick from 2-3 candidates), input metrics, a mapping of every PRD success criterion to a metric (target, baseline, window, owner), guardrail metrics and an event tracking plan from the PRD; writes `metrics.md`. Never invents targets or baselines: gaps are marked `TBD — Owner: <role>` and listed as open questions. |
 
 ## Ownership
 

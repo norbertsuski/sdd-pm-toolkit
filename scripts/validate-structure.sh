@@ -313,6 +313,48 @@ if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
 fi
 ok "pm-prd-review files, dimensions, mandate strings and eval ids checked"
 
+# --- 17. pm-metrics: files, format headings and table headers, TBD rule, eval ids, contract block
+PM=skills/pm-metrics
+for f in SKILL.md references/metrics-format.md references/eval-cases.md; do
+  [[ -f "$PM/$f" ]] || err "missing $PM/$f"
+done
+if [[ -f "$PM/references/metrics-format.md" ]]; then
+  for h in "## North Star Metric" "## Input Metrics" "## Success Criteria Mapping" "## Guardrail Metrics" \
+           "## Tracking Plan" "## Open Questions"; do
+    grep -qxF -- "$h" "$PM/references/metrics-format.md" || err "metrics-format.md missing heading: $h"
+  done
+  for t in '| PRD criterion | Metric | Target | Baseline | Window | Owner |' '| Event | Trigger | Properties | PRD ref |'; do
+    grep -qxF -- "$t" "$PM/references/metrics-format.md" || err "metrics-format.md missing table header: $t"
+  done
+fi
+if [[ -f "$PM/SKILL.md" ]]; then
+  for s in 'TBD — Owner' 'CONTRACT MISMATCH' 'Contract check procedure' 'object_action' 'North Star Metric' \
+           '### Primary' '### Guardrails' 'Overwrite' 'Merge'; do
+    grep -qF -- "$s" "$PM/SKILL.md" || err "pm-metrics/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PM/references/eval-cases.md" ]]; then
+  for id in MT-01 MT-02 MT-03 MT-04 MT-05; do
+    grep -qF "$id" "$PM/references/eval-cases.md" || err "pm-metrics eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$CONTRACT" ]]; then
+  grep -qxF "<!-- prd-success-criteria:start -->" "$CONTRACT" && grep -qxF "<!-- prd-success-criteria:end -->" "$CONTRACT" \
+    || err "sdd-contract.md missing markers for block 'prd-success-criteria'"
+  [[ "$(contract_block prd-success-criteria | wc -l | tr -d ' ')" -eq 3 ]] \
+    || err "sdd-contract.md block 'prd-success-criteria' must have exactly 3 entries"
+  if [[ -f "$FPRD" ]]; then
+    while IFS= read -r h; do
+      grep -qxF -- "$h" "$FPRD" || err "fixture prd.md missing Success Criteria subsection: $h"
+    done < <(contract_block prd-success-criteria)
+  fi
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F '`metrics.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'prd_version' \
+    || err "pm-artifacts.md metrics.md row must name the prd_version frontmatter key"
+fi
+ok "pm-metrics files, format headings, TBD rule, eval ids and contract block checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
