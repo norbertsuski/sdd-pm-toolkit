@@ -281,6 +281,38 @@ if [[ -f "$CONTRACT" ]]; then
 fi
 ok "pm-discover files, routed skills, stack gate, eval ids and contract blocks checked"
 
+# --- 16. pm-prd-review: files, dimensions, mandate strings, report headings, eval ids
+PR=skills/pm-prd-review
+for f in SKILL.md references/review-dimensions.md references/eval-cases.md; do
+  [[ -f "$PR/$f" ]] || err "missing $PR/$f"
+done
+if [[ -f "$PR/references/review-dimensions.md" ]]; then
+  for d in "Problem clarity" "Measurability" "Scope discipline" "Completeness" "Testability" \
+           "Traceability" "Open-question risk"; do
+    grep -qF -- "$d" "$PR/references/review-dimensions.md" || err "review-dimensions.md must name dimension '$d'"
+  done
+  grep -qF "PASS" "$PR/references/review-dimensions.md" && grep -qF "CONCERNS" "$PR/references/review-dimensions.md" \
+    && grep -qF "FAIL" "$PR/references/review-dimensions.md" \
+    || err "review-dimensions.md must carry a PASS / CONCERNS / FAIL rubric"
+fi
+if [[ -f "$PR/SKILL.md" ]]; then
+  for s in 'status: reviewed' 'never sets `locked`' '## Verdicts' '## Findings' '## Triage log' \
+           'NEEDS_ATTENTION' 'CONTRACT MISMATCH' 'Contract check procedure' 'Move to Open Questions' \
+           'Dismiss' 'Defer' 'Apply fix'; do
+    grep -qF -- "$s" "$PR/SKILL.md" || err "pm-prd-review/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PR/references/eval-cases.md" ]]; then
+  for id in PR-01 PR-02 PR-03 PR-04 PR-05 PR-06; do
+    grep -qF "$id" "$PR/references/eval-cases.md" || err "pm-prd-review eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F 'prd-review-<date>.md' "$HELP_REFS/pm-artifacts.md" | grep -qF 'verdict' \
+    || err "pm-artifacts.md prd-review row must name the verdict frontmatter key"
+fi
+ok "pm-prd-review files, dimensions, mandate strings and eval ids checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"

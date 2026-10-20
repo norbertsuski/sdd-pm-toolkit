@@ -2,7 +2,7 @@
 
 Personal Claude Code marketplace of product-manager skills for the SDD workflow.
 
-Ships one plugin: **sdd-pm-skills** (3 `pm-*` skills) — requires the **sdd-skills** plugin.
+Ships one plugin: **sdd-pm-skills** (4 `pm-*` skills) — requires the **sdd-skills** plugin.
 
 ## Install
 
@@ -38,6 +38,7 @@ claude --plugin-dir /path/to/sdd-pm-toolkit --plugin-dir /path/to/sdd-toolkit
 | `pm-help` | Map of the PM flow and a "you are here" report for a project. Read-only. |
 | `pm-research-synthesis` | Turns interview transcripts, notes and survey exports into evidence-linked insights (verbatim quotes, pseudonymized) with a seed for shaping. |
 | `pm-discover` | The discovery router: derives the project's stage from files on disk and walks the PM, one human-gated step at a time, through `/sdd-init`, `/sdd-shape`, `/sdd-prd`, `/pm-prd-review`, the stack step and `/sdd-roadmap`. Writes nothing itself. |
+| `pm-prd-review` | Reviews the PRD on seven dimensions (PASS / CONCERNS / FAIL, quoted evidence), gives an APPROVED / NEEDS_ATTENTION / REJECTED verdict, saves a report, and triages findings one by one: approved fixes edit `prd.md` (diff shown first); may set `status: reviewed`, never `locked`. |
 
 ## Ownership
 

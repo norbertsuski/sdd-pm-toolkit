@@ -11,7 +11,7 @@ any PM skill. See `sdd-contract.md` for the sdd-owned artifacts.
 | Path | Written by | Frontmatter | Required headings |
 |---|---|---|---|
 | `research/<date>-<topic>.md` (matches `research/*.md`) | `pm-research-synthesis` | `project`, `topic`, `created`, `updated`, `sources` (count) | `## Sources`, `## Insights`, `## Jobs to Be Done`, `## Pains & Gains`, `## Contradictions & Surprises`, `## Open Questions`, `## Seed for shaping` (format: `skills/pm-research-synthesis/references/insights-format.md`) |
-| `prd-review-<date>.md` | `pm-prd-review` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
+| `prd-review-<date>.md` (a same-day second review is `prd-review-<date>-2.md`) | `pm-prd-review` | `project`, `prd_version`, `created`, `updated`, `verdict` (`APPROVED` \| `NEEDS_ATTENTION` \| `REJECTED`); marker `<!-- PRD-REVIEW-REPORT -->` | `## Verdicts`, `## Findings`, `## Triage log`; each finding is `### F<n> — <title>` with `Severity`, `Dimension`, `PRD ref`, `Evidence`, `Why it matters`, `Fix options`, `Decision` (format: `skills/pm-prd-review/SKILL.md` Step 7) |
 | `metrics.md` | `pm-metrics` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
 | `prioritization.md` | `pm-prioritize` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
 | `forecast.md` | `pm-forecast` | — (filled by the owning skill's task) | — (filled by the owning skill's task) |
