@@ -435,6 +435,50 @@ if [[ -f "$PP/SKILL.md" ]]; then
 fi
 ok "pm-prioritize embedded scripts run (scores, rejections, injection, conflicts)"
 
+# --- 20. pm-forecast: files, script + tests, CI line, headings, caveat/wording strings, eval ids, artifact row
+PF=skills/pm-forecast
+for f in SKILL.md scripts/forecast.py references/forecast-format.md references/eval-cases.md; do
+  [[ -f "$PF/$f" ]] || err "missing $PF/$f"
+done
+[[ -f tests/test_forecast.py ]] || err "missing tests/test_forecast.py"
+if [[ -f .gitlab-ci.yml ]]; then
+  grep -qxF -- '    - python3 -m unittest discover -s tests -v' .gitlab-ci.yml \
+    || err ".gitlab-ci.yml must run: python3 -m unittest discover -s tests -v"
+else
+  err ".gitlab-ci.yml missing"
+fi
+if [[ -f "$PF/scripts/forecast.py" ]]; then
+  grep -qxF 'from __future__ import annotations' "$PF/scripts/forecast.py" \
+    || err "forecast.py must start with 'from __future__ import annotations' (Python 3.9 compatibility)"
+  if grep -En '^(import|from)[[:space:]]+(numpy|pandas|scipy|yaml|requests)' "$PF/scripts/forecast.py" >/dev/null; then
+    err "forecast.py must be stdlib only"
+  fi
+fi
+if [[ -f "$PF/SKILL.md" ]]; then
+  for s in 'scripts/forecast.py' 'roadmap.md stays estimate-free' 'insufficient-history' 'CONTRACT MISMATCH' \
+           'Contract check procedure' 'likely by' 'very likely by' 'almost certain by' 'Deadline Check' 'Base directory'; do
+    grep -qF -- "$s" "$PF/SKILL.md" || err "pm-forecast/SKILL.md must mention '$s'"
+  done
+fi
+if [[ -f "$PF/references/forecast-format.md" ]]; then
+  for h in "## Forecast" "## Inputs" "## Assumptions & Caveats" "## Deadline Check"; do
+    grep -qxF -- "$h" "$PF/references/forecast-format.md" || err "forecast-format.md missing heading: $h"
+  done
+  for s in 'monte-carlo-throughput' 'ignores dependency depth and parallelism' 'blocked items'; do
+    grep -qF -- "$s" "$PF/references/forecast-format.md" || err "forecast-format.md must mention '$s'"
+  done
+fi
+if [[ -f "$PF/references/eval-cases.md" ]]; then
+  for id in FC-01 FC-02 FC-03 FC-04 FC-05; do
+    grep -qF "$id" "$PF/references/eval-cases.md" || err "pm-forecast eval-cases.md missing $id"
+  done
+fi
+if [[ -f "$HELP_REFS/pm-artifacts.md" ]]; then
+  grep -F '`forecast.md`' "$HELP_REFS/pm-artifacts.md" | grep -qF 'method' \
+    || err "pm-artifacts.md forecast.md row must name the method frontmatter key"
+fi
+ok "pm-forecast files, script, tests, CI line, headings and eval ids checked"
+
 echo
 if [[ $fail -eq 0 ]]; then
   echo "validate-structure: ALL CHECKS PASSED"
