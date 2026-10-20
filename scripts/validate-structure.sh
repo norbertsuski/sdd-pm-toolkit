@@ -111,10 +111,11 @@ done
 ok "relative .md links in SKILL.md files resolve"
 
 # --- 7. CI runs this validator ------------------------------------------
-[[ -f .gitlab-ci.yml ]] \
-  && grep -q "bash scripts/validate-structure.sh" .gitlab-ci.yml \
-  && ok "GitLab CI runs the structural validator" \
-  || err ".gitlab-ci.yml does not run bash scripts/validate-structure.sh"
+CI_FILE=.github/workflows/validate.yml
+[[ -f "$CI_FILE" ]] \
+  && grep -qF "run: bash scripts/validate-structure.sh" "$CI_FILE" \
+  && ok "GitHub Actions runs the structural validator" \
+  || err "$CI_FILE does not run bash scripts/validate-structure.sh"
 
 # --- 8. pm-help shared references exist ---------------------------------
 HELP_REFS=skills/pm-help/references
@@ -482,11 +483,11 @@ for f in SKILL.md scripts/forecast.py references/forecast-format.md references/e
   [[ -f "$PF/$f" ]] || err "missing $PF/$f"
 done
 [[ -f tests/test_forecast.py ]] || err "missing tests/test_forecast.py"
-if [[ -f .gitlab-ci.yml ]]; then
-  grep -qxF -- '    - python3 -m unittest discover -s tests -v' .gitlab-ci.yml \
-    || err ".gitlab-ci.yml must run: python3 -m unittest discover -s tests -v"
+if [[ -f "$CI_FILE" ]]; then
+  grep -qF -- 'run: python3 -m unittest discover -s tests -v' "$CI_FILE" \
+    || err "$CI_FILE must run: python3 -m unittest discover -s tests -v"
 else
-  err ".gitlab-ci.yml missing"
+  err "$CI_FILE missing"
 fi
 if [[ -f "$PF/scripts/forecast.py" ]]; then
   grep -qxF 'from __future__ import annotations' "$PF/scripts/forecast.py" \
@@ -533,9 +534,9 @@ for f in SKILL.md references/tracker-map-format.md references/eval-cases.md; do
   [[ -f "$BS/$f" ]] || err "missing $BS/$f"
 done
 [[ -f scripts/validate-pm-evals.sh ]] || err "missing scripts/validate-pm-evals.sh"
-if [[ -f .gitlab-ci.yml ]]; then
-  grep -qxF -- '    - bash scripts/validate-pm-evals.sh' .gitlab-ci.yml \
-    || err ".gitlab-ci.yml must run: bash scripts/validate-pm-evals.sh"
+if [[ -f "$CI_FILE" ]]; then
+  grep -qF -- 'run: bash scripts/validate-pm-evals.sh' "$CI_FILE" \
+    || err "$CI_FILE must run: bash scripts/validate-pm-evals.sh"
 fi
 if [[ -f "$BS/references/tracker-map-format.md" ]]; then
   for h in "## Frontmatter" "## Mapping table" "## Orphans" "## Issue mapping" "## Description template" "## Canonical rendering" "## Sync decision table"; do

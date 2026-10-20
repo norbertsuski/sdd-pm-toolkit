@@ -127,7 +127,7 @@ identical in both modes.
 - `scripts/validate-pm-evals.sh` — deterministic reference functions for sync actions and RAG.
 - `tests/test_forecast.py` — stdlib `unittest` for `pm-forecast/scripts/forecast.py`.
 - `skills/*/references/eval-cases.md` — behavioral prompt fixtures per skill.
-- GitLab CI runs all three automated checks.
+- GitHub Actions (`.github/workflows/validate.yml`) runs all three automated checks.
 
 ## Amendments (2026-10-20, during implementation)
 
